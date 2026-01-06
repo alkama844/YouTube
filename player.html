@@ -208,14 +208,16 @@
         
         <div id="controls">
             <button class="control-btn" id="back-btn">← Back</button>
-            <button class="control-btn" id="background-btn" title="Enable background play">🎵 Background</button>
+            <button class="control-btn" id="youtube-btn" title="Open in YouTube app for true background play">📱 YouTube</button>
             <button class="control-btn" id="fullscreen-btn">⛶ Full</button>
         </div>
     </div>
 
     <div id="error-screen">
         <h2>⚠️ Video Cannot Be Embedded</h2>
-        <p>This video is restricted by the creator and cannot be played here.<br>Opening in YouTube for full experience...</p>
+        <p>This video is restricted by the creator and cannot be played here.<br><br>
+        💡 TIP: For true background play (even when Chrome is closed), use the YouTube app!<br>
+        Web apps can only play while Chrome is open.</p>
         <button id="open-youtube-btn">Open in YouTube</button>
     </div>
 
@@ -229,7 +231,7 @@
         const youtubePlayer = document.getElementById('youtube-player');
         const controls = document.getElementById('controls');
         const backBtn = document.getElementById('back-btn');
-        const backgroundBtn = document.getElementById('background-btn');
+        const youtubeBtn = document.getElementById('youtube-btn');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
         const errorScreen = document.getElementById('error-screen');
         const openYoutubeBtn = document.getElementById('open-youtube-btn');
@@ -237,8 +239,6 @@
 
         let isBlocked = false;
         let isFullscreen = false;
-        let backgroundPlayEnabled = false;
-        let wakeLock = null;
 
         // Check if video ID exists
         if (!videoId) {
@@ -258,9 +258,6 @@
                 setTimeout(() => {
                     loading.style.display = 'none';
                     playerContainer.classList.add('playing');
-                    
-                    // Auto-enable background play
-                    enableBackgroundPlay();
                     
                     // Auto-fullscreen on mobile for immersive experience
                     if (window.innerWidth <= 768 && !isFullscreen) {
@@ -310,69 +307,28 @@
             errorScreen.classList.add('show');
         }
 
-        // Background Play Toggle
-        async function enableBackgroundPlay() {
-            if (backgroundPlayEnabled) return;
+        // Open in YouTube App for TRUE Background Play
+        youtubeBtn.addEventListener('click', () => {
+            // Web apps CAN'T play in background when Chrome is completely closed
+            // Opening YouTube app is the ONLY way for true background play
+            const message = '📱 Opening YouTube app for TRUE background play!\\n\\n' +
+                           '⚠️ Note: Web apps stop when you close Chrome.\\n' +
+                           'Use YouTube app for background play when Chrome is closed.';
             
-            try {
-                // Request wake lock to keep page active
-                if ('wakeLock' in navigator) {
-                    wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Wake lock acquired');
-                }
-                
-                backgroundPlayEnabled = true;
-                backgroundBtn.classList.add('bg-active');
-                backgroundBtn.textContent = '✓ Background ON';
-                
-                // Keep audio playing when page is hidden
-                document.addEventListener('visibilitychange', handleVisibilityChange);
-                
-            } catch (error) {
-                console.log('Wake lock not supported:', error);
-                // Fallback: still enable visibility handling
-                backgroundPlayEnabled = true;
-                backgroundBtn.classList.add('bg-active');
-                backgroundBtn.textContent = '✓ Background ON';
-                document.addEventListener('visibilitychange', handleVisibilityChange);
-            }
-        }
-
-        function handleVisibilityChange() {
-            if (document.hidden) {
-                console.log('App in background - audio should continue');
-                // Video continues playing in background
-            } else {
-                console.log('App in foreground');
-                // Reacquire wake lock if needed
-                if (wakeLock === null && 'wakeLock' in navigator) {
-                    navigator.wakeLock.request('screen').then(lock => {
-                        wakeLock = lock;
-                    }).catch(err => console.log('Wake lock error:', err));
-                }
-            }
-        }
-
-        async function disableBackgroundPlay() {
-            if (!backgroundPlayEnabled) return;
+            // Try to open YouTube app first (works on mobile)
+            const youtubeAppUrl = `vnd.youtube://watch?v=${videoId}`;
+            const youtubeMobileUrl = `https://m.youtube.com/watch?v=${videoId}`;
             
-            if (wakeLock) {
-                await wakeLock.release();
-                wakeLock = null;
-            }
+            // Show message
+            alert(message);
             
-            document.removeEventListener('visibilitychange', handleVisibilityChange);
-            backgroundPlayEnabled = false;
-            backgroundBtn.classList.remove('bg-active');
-            backgroundBtn.textContent = '🎵 Background';
-        }
-
-        backgroundBtn.addEventListener('click', async () => {
-            if (backgroundPlayEnabled) {
-                await disableBackgroundPlay();
-            } else {
-                await enableBackgroundPlay();
-            }
+            // Try YouTube app
+            window.location.href = youtubeAppUrl;
+            
+            // Fallback to mobile YouTube after 1s if app doesn't open
+            setTimeout(() => {
+                window.location.href = youtubeMobileUrl;
+            }, 1000);
         });
 
         // Fullscreen
@@ -430,8 +386,9 @@
             window.location.href = `https://m.youtube.com/watch?v=${videoId}`;
         }
 
-        // Keep controls visible - no auto-hide
-        // Users need constant access to background play toggle
+        // Keep controls visible - always accessible
+        // Web apps can only play in background while Chrome is open (not closed)
+        // For true background play when Chrome is closed, use YouTube app button
 
         // Handle back button
         window.addEventListener('popstate', () => {
@@ -450,8 +407,6 @@
             youtubePlayer.style.transform = 'translateZ(0)';
         });
 
-        // Background play is now handled by enableBackgroundPlay() function above
-
         // Prevent accidental navigation
         window.addEventListener('beforeunload', (e) => {
             if (!isBlocked && playerContainer.classList.contains('playing')) {
@@ -467,9 +422,9 @@
                 case 'F':
                     fullscreenBtn.click();
                     break;
-                case 'b':
-                case 'B':
-                    backgroundBtn.click();
+                case 'y':
+                case 'Y':
+                    youtubeBtn.click();
                     break;
                 case 'Escape':
                     if (document.fullscreenElement) {
