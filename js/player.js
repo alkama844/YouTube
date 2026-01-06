@@ -8,126 +8,96 @@ class VideoPlayer {
         this.embedCheckTimeout = null;
     }
 
-    // Initialize YouTube iframe player with robust error handling
+    // Universal player that works for ALL videos
     initPlayer(videoId, quality = 'default') {
         this.currentVideoId = videoId;
         const playerContainer = document.getElementById('video-player');
         
-        // Clear previous content and timeouts
+        // Clear previous content
         playerContainer.innerHTML = '';
-        if (this.embedCheckTimeout) {
-            clearTimeout(this.embedCheckTimeout);
-        }
         
-        // Create responsive iframe container
+        // Create wrapper
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'width: 100%; height: 100%; background: #000; position: relative; overflow: hidden;';
+        wrapper.style.cssText = 'width: 100%; height: 100%; background: linear-gradient(135deg, var(--bg-color) 0%, var(--surface-color) 100%); position: relative;';
         wrapper.id = 'player-wrapper';
         
-        // Create iframe with optimized settings
-        const iframe = document.createElement('iframe');
-        iframe.id = 'youtube-iframe';
-        iframe.style.cssText = 'width: 100%; height: 100%; border: none; display: block;';
-        iframe.setAttribute('allowfullscreen', '');
-        iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
-        iframe.setAttribute('loading', 'eager');
+        // Try embed first, with instant fallback option
+        this.showUniversalPlayer(videoId, wrapper);
         
-        // Use standard YouTube embed for better compatibility
-        const embedUrl = new URL(`https://www.youtube.com/embed/${videoId}`);
-        embedUrl.searchParams.set('autoplay', '1');
-        embedUrl.searchParams.set('modestbranding', '1');
-        embedUrl.searchParams.set('rel', '0');
-        embedUrl.searchParams.set('playsinline', '1');
-        embedUrl.searchParams.set('fs', '1');
-        embedUrl.searchParams.set('enablejsapi', '1');
-        // Remove origin restriction to avoid blocking
-        // embedUrl.searchParams.set('origin', window.location.origin);
-        
-        iframe.src = embedUrl.toString();
-        
-        // Listen for YouTube player errors
-        window.addEventListener('message', (event) => {
-            if (event.origin.includes('youtube.com') || event.origin.includes('youtube-nocookie.com')) {
-                try {
-                    const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-                    // Check for error events (Error 150, 153, etc.)
-                    if (data.event === 'infoDelivery' && data.info && data.info.playerState === -1) {
-                        // Player error state
-                        setTimeout(() => this.detectEmbedError(videoId, wrapper), 1000);
-                    }
-                    if (data.event === 'onError' || (data.info && data.info.errorCode)) {
-                        console.log('YouTube player error detected:', data);
-                        this.showFallbackPlayer(videoId, wrapper);
-                    }
-                } catch (e) {
-                    // Ignore parse errors
-                }
-            }
-        });
-        
-        // Add load event listener
-        iframe.addEventListener('load', () => {
-            this.checkEmbedRestrictions(videoId, wrapper);
-        });
-        
-        // Add error event listener
-        iframe.addEventListener('error', () => {
-            this.showFallbackPlayer(videoId, wrapper);
-        });
-        
-        wrapper.appendChild(iframe);
         playerContainer.appendChild(wrapper);
-        this.player = iframe;
-        
-        // Backup check after 3 seconds
-        this.embedCheckTimeout = setTimeout(() => {
-            this.verifyPlayerLoaded(videoId, wrapper);
-        }, 3000);
-        
-        return iframe;
     }
     
-    // Detect embed errors (Error 153, 150, etc.)
-    detectEmbedError(videoId, wrapper) {
-        const iframe = document.getElementById('youtube-iframe');
-        if (!iframe) return;
+    // Show universal player with embed + instant watch options
+    showUniversalPlayer(videoId, wrapper) {
+        const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        const mobileUrl = `https://m.youtube.com/watch?v=${videoId}`;
+        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&playsinline=1&fs=1`;
         
-        // Check if iframe has very small height (sign of error)
-        const rect = iframe.getBoundingClientRect();
-        if (rect.height < 100 && rect.width > 0) {
-            console.log('Embed restriction detected (small iframe height)');
-            this.showFallbackPlayer(videoId, wrapper);
-        }
-    }
-    
-    // Check if embed loaded successfully
-    verifyPlayerLoaded(videoId, wrapper) {
-        const iframe = document.getElementById('youtube-iframe');
-        if (!iframe || iframe.style.display === 'none') {
-            this.showFallbackPlayer(videoId, wrapper);
-        }
-    }
-    
-    // Check for embed restrictions
-    checkEmbedRestrictions(videoId, wrapper) {
-        try {
+        wrapper.innerHTML = `
+            <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
+                <!-- Embed iframe attempt -->
+                <div id="embed-container" style="flex: 1; position: relative; background: #000;">
+                    <iframe 
+                        id="youtube-iframe"
+                        style="width: 100%; height: 100%; border: none;" 
+                        src="${embedUrl}"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                        allowfullscreen
+                        referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                    
+                    <!-- Quick action overlay (shows on load) -->
+                    <div id="quick-actions" style="position: absolute; top: 0; left: 0; right: 0; padding: 15px; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%); z-index: 10; display: flex; gap: 8px; flex-wrap: wrap;">
+                        <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer"
+                           style="background: #FF0000; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(255,0,0,0.4); transition: all 0.2s;"
+                           onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(255,0,0,0.6)'"
+                           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 10px rgba(255,0,0,0.4)'">
+                            ▶ Watch on YouTube
+                        </a>
+                        <button onclick="document.getElementById('embed-container').requestFullscreen().catch(e => alert('Fullscreen not available'))" 
+                           style="background: rgba(255,255,255,0.2); color: white; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); font-size: 13px; font-weight: 600; cursor: pointer; backdrop-filter: blur(10px);"
+                           onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                           onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                            ⛶ Fullscreen
+                        </button>
+                        <button onclick="navigator.clipboard.writeText('${youtubeUrl}').then(() => alert('✅ Link copied!')).catch(() => prompt('Copy:', '${youtubeUrl}'))" 
+                           style="background: rgba(255,255,255,0.2); color: white; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); font-size: 13px; font-weight: 600; cursor: pointer; backdrop-filter: blur(10px);"
+                           onmouseover="this.style.background='rgba(255,255,255,0.3)'"
+                           onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                            📋 Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Alternative watch options bar -->
+                <div style="background: var(--surface-color); border-top: 1px solid var(--border-color); padding: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">📱 Can't play?</span>
+                    <a href="${mobileUrl}" target="_blank" rel="noopener noreferrer"
+                       style="background: var(--neon-blue); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 700; box-shadow: 0 0 15px var(--primary-glow);">
+                        Mobile YouTube
+                    </a>
+                    <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer"
+                       style="background: var(--surface-hover); color: var(--neon-green); padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 700; border: 1px solid var(--neon-green);">
+                        Desktop YouTube
+                    </a>
+                </div>
+            </div>
+        `;
+        
+        // Check if embed loads successfully
+        setTimeout(() => {
             const iframe = document.getElementById('youtube-iframe');
-            // Monitor iframe for X-Frame-Options blocking
-            setTimeout(() => {
-                try {
-                    // If we can't access iframe content, it might be blocked
-                    const iframeWindow = iframe.contentWindow;
-                    if (!iframeWindow) {
-                        this.showFallbackPlayer(videoId, wrapper);
+            if (iframe) {
+                // If iframe has issues, highlight the quick actions
+                iframe.addEventListener('error', () => {
+                    const quickActions = document.getElementById('quick-actions');
+                    if (quickActions) {
+                        quickActions.style.background = 'rgba(255, 0, 0, 0.9)';
+                        quickActions.innerHTML = `<div style="flex: 1; text-align: center; color: white; font-weight: 700;">⚠️ Embedding blocked - Use buttons below to watch</div>`;
                     }
-                } catch (e) {
-                    // Cross-origin error is expected, but complete blocking is different
-                    console.log('Iframe check:', e.message);
-                }
-            }, 500);
-        } catch (error) {
-            this.showFallbackPlayer(videoId, wrapper);
-        }
+                });
+            }
+        }, 1000);
     }
     
     // Show fallback player with alternative options
