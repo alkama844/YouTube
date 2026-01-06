@@ -161,7 +161,7 @@ class FastTubeApp {
 
     // Show API key prompt (legacy)
     showAPIKeyPrompt() {
-        // Removed - Error('Failed to load videos. Please check your API key in Settings.' by showAPIKeyRequired
+        // Removed - Replaced with showAPIKeyRequired which shows error: 'Failed to load videos. Please check your API key in Settings.'
     }
 
     // Handle search
