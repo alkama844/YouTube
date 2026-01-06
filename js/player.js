@@ -12,18 +12,9 @@ class VideoPlayer {
     async initPlayer(videoId, quality = 'default') {
         this.currentVideoId = videoId;
         
-        // Open dedicated player page with background play
+        // Open dedicated player page in current tab (more professional on mobile)
         const playerUrl = `player.html?v=${videoId}`;
-        window.open(playerUrl, '_blank', 'width=800,height=600');
-        
-        // Load video details in main app
-        this.loadVideoDetails(videoId);
-        
-        // Show player section with details
-        const playerSection = document.getElementById('video-player');
-        if (playerSection) {
-            playerSection.classList.add('active');
-        }
+        window.location.href = playerUrl;
     }
     
     // Load video description and stats

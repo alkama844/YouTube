@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>FastTube Player</title>
     <style>
         * {
@@ -203,9 +203,9 @@
         <iframe id="youtube-player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
         
         <div id="controls">
-            <button class="control-btn" id="pip-btn">📺 PiP</button>
+            <button class="control-btn" id="back-btn">← Back</button>
+            <button class="control-btn" id="background-btn" title="Enable background play">🎵 Background</button>
             <button class="control-btn" id="fullscreen-btn">⛶ Full</button>
-            <button class="control-btn" id="close-btn">✕ Close</button>
         </div>
     </div>
 
@@ -224,16 +224,16 @@
         const playerContainer = document.getElementById('player-container');
         const youtubePlayer = document.getElementById('youtube-player');
         const controls = document.getElementById('controls');
-        const pipBtn = document.getElementById('pip-btn');
+        const backBtn = document.getElementById('back-btn');
+        const backgroundBtn = document.getElementById('background-btn');
         const fullscreenBtn = document.getElementById('fullscreen-btn');
-        const closeBtn = document.getElementById('close-btn');
         const errorScreen = document.getElementById('error-screen');
         const openYoutubeBtn = document.getElementById('open-youtube-btn');
         const loading = document.getElementById('loading');
 
-        let pipSupported = false;
         let isBlocked = false;
         let controlsTimer = null;
+        let isFullscreen = false;
 
         // Check if video ID exists
         if (!videoId) {
@@ -253,6 +253,11 @@
                 setTimeout(() => {
                     loading.style.display = 'none';
                     playerContainer.classList.add('playing');
+                    
+                    // Auto-fullscreen on mobile for immersive experience
+                    if (window.innerWidth <= 768 && !isFullscreen) {
+                        enterFullscreen();
+                    }
                 }, 1000);
             });
 
@@ -260,13 +265,6 @@
             setTimeout(() => {
                 detectBlocked();
             }, 4000);
-
-            // Check PiP support
-            if ('pictureInPictureEnabled' in document) {
-                pipSupported = true;
-            } else {
-                pipBtn.style.display = 'none';
-            }
         }
 
         function detectBlocked() {
@@ -304,52 +302,61 @@
             errorScreen.classList.add('show');
         }
 
-        // Picture-in-Picture
-        pipBtn.addEventListener('click', async () => {
-            if (!pipSupported) {
-                alert('Picture-in-Picture not supported on this device');
-                return;
-            }
-
-            try {
-                // PiP for iframe is tricky, we need to use the video element inside
-                // Since we can't access iframe content, we'll try document PiP API
-                if (document.pictureInPictureElement) {
-                    await document.exitPictureInPicture();
-                    pipBtn.classList.remove('active');
-                } else {
-                    // For iframe, we can't directly use PiP
-                    // Instead, inform user to use YouTube's native PiP
-                    alert('Use YouTube\'s built-in PiP button in the video player controls');
-                }
-            } catch (error) {
-                console.error('PiP error:', error);
-                alert('Picture-in-Picture not available. Try using YouTube\'s native PiP button.');
-            }
+        // Background Play Instructions
+        backgroundBtn.addEventListener('click', () => {
+            const instructions = `📱 To enable background play:\n\n` +
+                `1. Tap fullscreen (⛶) button\n` +
+                `2. Press Home button to minimize\n` +
+                `3. Audio continues in background!\n\n` +
+                `OR use YouTube's PiP button in video controls for true background play.`;
+            
+            alert(instructions);
         });
 
         // Fullscreen
-        fullscreenBtn.addEventListener('click', async () => {
+        async function enterFullscreen() {
             try {
-                if (document.fullscreenElement) {
-                    await document.exitFullscreen();
-                    fullscreenBtn.textContent = '⛶ Full';
-                } else {
+                if (!document.fullscreenElement) {
                     await playerContainer.requestFullscreen();
                     fullscreenBtn.textContent = '⛶ Exit';
+                    isFullscreen = true;
                 }
             } catch (error) {
                 console.error('Fullscreen error:', error);
             }
+        }
+
+        async function exitFullscreen() {
+            try {
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                    fullscreenBtn.textContent = '⛶ Full';
+                    isFullscreen = false;
+                }
+            } catch (error) {
+                console.error('Fullscreen error:', error);
+            }
+        }
+
+        fullscreenBtn.addEventListener('click', async () => {
+            if (document.fullscreenElement) {
+                await exitFullscreen();
+            } else {
+                await enterFullscreen();
+            }
         });
 
-        // Close player
-        closeBtn.addEventListener('click', () => {
-            if (window.opener) {
-                window.close();
-            } else {
-                window.history.back();
+        // Listen for fullscreen changes
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement) {
+                fullscreenBtn.textContent = '⛶ Full';
+                isFullscreen = false;
             }
+        });
+
+        // Back button - return to main app
+        backBtn.addEventListener('click', () => {
+            window.history.back();
         });
 
         // Open in YouTube
@@ -358,12 +365,7 @@
         });
 
         function openInYouTube() {
-            window.open(`https://m.youtube.com/watch?v=${videoId}`, '_blank');
-            setTimeout(() => {
-                if (window.opener) {
-                    window.close();
-                }
-            }, 500);
+            window.location.href = `https://m.youtube.com/watch?v=${videoId}`;
         }
 
         // Auto-hide controls
@@ -434,13 +436,13 @@
                 case 'F':
                     fullscreenBtn.click();
                     break;
-                case 'p':
-                case 'P':
-                    pipBtn.click();
+                case 'b':
+                case 'B':
+                    backgroundBtn.click();
                     break;
                 case 'Escape':
                     if (document.fullscreenElement) {
-                        document.exitFullscreen();
+                        exitFullscreen();
                     } else {
                         closeBtn.click();
                     }
