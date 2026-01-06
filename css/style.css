@@ -20,11 +20,19 @@
     --neon-orange: #ff9500;
 }
 
-/* ===== Reset & Base Styles ===== */
+/* ===== Performance Optimizations ===== */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+}
+
+/* Enable hardware acceleration for smooth performance */
+body, .app-container, .player-section {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
 }
 
 body {
@@ -319,9 +327,12 @@ body::before {
     border-radius: 16px;
     overflow: hidden;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: transform 0.2s ease;
     border: 1px solid var(--border-color);
     position: relative;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    will-change: transform;
 }
 
 .video-card::before {
@@ -457,6 +468,13 @@ body::before {
     background: black;
     position: relative;
     will-change: transform;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+#video-player iframe {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
 }
 
 .player-controls {

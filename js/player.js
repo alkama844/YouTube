@@ -8,7 +8,7 @@ class VideoPlayer {
         this.embedCheckTimeout = null;
     }
 
-    // Aggressive multi-method player - tries EVERYTHING
+    // ULTRA FAST player - optimized like real YouTube
     async initPlayer(videoId, quality = 'default') {
         this.currentVideoId = videoId;
         const playerContainer = document.getElementById('video-player');
@@ -16,109 +16,23 @@ class VideoPlayer {
         // Clear previous content
         playerContainer.innerHTML = '';
         
-        // Try Method 1: Standard embed (works for many)
-        this.tryMethod1(videoId, playerContainer);
-        
-        // If fails, auto-try other methods
-        setTimeout(() => this.checkAndRetry(videoId, playerContainer), 2000);
-        
-        // Load video details
-        await this.loadVideoDetails(videoId);
-    }
-    
-    // Method 1: Standard YouTube embed
-    tryMethod1(videoId, container) {
+        // FASTEST configuration - no delays, no checks
         const iframe = document.createElement('iframe');
         iframe.id = 'yt-player';
         iframe.style.cssText = 'width: 100%; height: 100%; border: none; background: #000;';
         iframe.setAttribute('allowfullscreen', '');
         iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1`;
-        container.appendChild(iframe);
-        this.player = iframe;
-    }
-    
-    // Method 2: No-cookie domain
-    tryMethod2(videoId, container) {
-        container.innerHTML = '';
-        const iframe = document.createElement('iframe');
-        iframe.id = 'yt-player';
-        iframe.style.cssText = 'width: 100%; height: 100%; border: none; background: #000;';
-        iframe.setAttribute('allowfullscreen', '');
-        iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-        iframe.src = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1`;
-        container.appendChild(iframe);
-        this.player = iframe;
-    }
-    
-    // Method 3: Minimal parameters
-    tryMethod3(videoId, container) {
-        container.innerHTML = '';
-        const iframe = document.createElement('iframe');
-        iframe.id = 'yt-player';
-        iframe.style.cssText = 'width: 100%; height: 100%; border: none; background: #000;';
-        iframe.setAttribute('allowfullscreen', '');
-        iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-        container.appendChild(iframe);
-        this.player = iframe;
-    }
-    
-    // Check if current method works, if not try next
-    checkAndRetry(videoId, container) {
-        const iframe = document.getElementById('yt-player');
-        if (!iframe) return;
+        iframe.setAttribute('loading', 'eager'); // Prioritize loading
+        iframe.setAttribute('importance', 'high'); // High priority
         
-        const rect = iframe.getBoundingClientRect();
+        // Optimized URL - autoplay, minimal params for SPEED
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
         
-        // If iframe seems blocked (very small height)
-        if (rect.height < 100) {
-            console.log('Method 1 failed, trying Method 2...');
-            this.tryMethod2(videoId, container);
-            
-            // Check Method 2
-            setTimeout(() => {
-                const iframe2 = document.getElementById('yt-player');
-                if (iframe2) {
-                    const rect2 = iframe2.getBoundingClientRect();
-                    if (rect2.height < 100) {
-                        console.log('Method 2 failed, trying Method 3...');
-                        this.tryMethod3(videoId, container);
-                        
-                        // Final check
-                        setTimeout(() => {
-                            const iframe3 = document.getElementById('yt-player');
-                            if (iframe3) {
-                                const rect3 = iframe3.getBoundingClientRect();
-                                if (rect3.height < 100) {
-                                    console.log('All methods failed - video owner disabled embedding');
-                                    this.showUnavailableMessage(videoId, container);
-                                }
-                            }
-                        }, 2000);
-                    }
-                }
-            }, 2000);
-        }
-    }
-    
-    // Show message for unavailable videos
-    showUnavailableMessage(videoId, container) {
-        container.innerHTML = `
-            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--bg-color), var(--surface-color)); padding: 20px;">
-                <div style="text-align: center; max-width: 350px;">
-                    <div style="font-size: 60px; margin-bottom: 20px;">🔒</div>
-                    <h3 style="color: var(--neon-orange); margin-bottom: 12px; font-size: 17px; font-weight: 700;">Video Owner Restriction</h3>
-                    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 13px; line-height: 1.5;">
-                        This specific video cannot be embedded by the owner's choice. Try searching for other videos - most work fine!
-                    </p>
-                    <button onclick="document.getElementById('close-player').click()" 
-                            style="background: var(--neon-blue); color: white; padding: 12px 30px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 0 20px var(--primary-glow);">
-                        ← Back to Search
-                    </button>
-                </div>
-            </div>
-        `;
+        playerContainer.appendChild(iframe);
+        this.player = iframe;
+        
+        // Load video details (async, doesn't block player)
+        this.loadVideoDetails(videoId);
     }
     
     // Load video description and stats
