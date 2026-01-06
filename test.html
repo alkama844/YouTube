@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FastTube Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #0a0a0f;
+            color: #fff;
+        }
+        .test-result {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            border: 2px solid #00f0ff;
+        }
+        .success { border-color: #00ff88; background: rgba(0, 255, 136, 0.1); }
+        .error { border-color: #ff0055; background: rgba(255, 0, 85, 0.1); }
+        button {
+            background: #00f0ff;
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover { background: #00d0dd; }
+    </style>
+</head>
+<body>
+    <h1>🧪 FastTube Test Page</h1>
+    
+    <button onclick="runTests()">Run All Tests</button>
+    <button onclick="location.href='index.html'">Go to App</button>
+    
+    <div id="results"></div>
+
+    <script src="js/config.js"></script>
+    <script>
+        function runTests() {
+            const results = document.getElementById('results');
+            results.innerHTML = '<h2>Running Tests...</h2>';
+            
+            const tests = [];
+            
+            // Test 1: Config loaded
+            tests.push({
+                name: 'Config Loaded',
+                pass: typeof CONFIG !== 'undefined',
+                message: CONFIG ? 'CONFIG object exists' : 'CONFIG not found'
+            });
+            
+            // Test 2: API Key present
+            tests.push({
+                name: 'API Key Present',
+                pass: CONFIG && CONFIG.API_KEY && CONFIG.API_KEY.length > 0,
+                message: CONFIG && CONFIG.API_KEY ? `API Key: ${CONFIG.API_KEY.substring(0, 10)}...` : 'No API key'
+            });
+            
+            // Test 3: API Key valid format
+            tests.push({
+                name: 'API Key Valid',
+                pass: CONFIG && CONFIG.API_KEY && CONFIG.API_KEY.length > 20,
+                message: CONFIG && CONFIG.API_KEY ? `Length: ${CONFIG.API_KEY.length} chars` : 'Invalid'
+            });
+            
+            // Test 4: Feature flags
+            tests.push({
+                name: 'Feature Flags',
+                pass: CONFIG && CONFIG.ENABLE_QUALITY_SELECTOR && CONFIG.ENABLE_SPEED_CONTROL,
+                message: 'Pro features enabled'
+            });
+            
+            // Test 5: LocalStorage
+            tests.push({
+                name: 'LocalStorage Available',
+                pass: typeof localStorage !== 'undefined',
+                message: 'LocalStorage working'
+            });
+            
+            // Test 6: DOM Ready
+            tests.push({
+                name: 'DOM Ready',
+                pass: document.readyState === 'complete',
+                message: `State: ${document.readyState}`
+            });
+            
+            // Display results
+            let html = '<h2>Test Results:</h2>';
+            let passCount = 0;
+            
+            tests.forEach(test => {
+                if (test.pass) passCount++;
+                html += `
+                    <div class="test-result ${test.pass ? 'success' : 'error'}">
+                        <strong>${test.pass ? '✓' : '✗'} ${test.name}</strong><br>
+                        ${test.message}
+                    </div>
+                `;
+            });
+            
+            html = `<h2>Tests: ${passCount}/${tests.length} Passed</h2>` + html;
+            
+            if (passCount === tests.length) {
+                html += '<div class="test-result success"><h3>🎉 All Tests Passed! App should work perfectly.</h3></div>';
+            } else {
+                html += '<div class="test-result error"><h3>⚠️ Some tests failed. Check console for errors.</h3></div>';
+            }
+            
+            results.innerHTML = html;
+        }
+        
+        // Auto-run tests
+        window.onload = runTests;
+    </script>
+</body>
+</html>

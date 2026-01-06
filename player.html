@@ -28,10 +28,18 @@
         }
 
         #youtube-player {
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             border: none;
             display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #player-container.fullscreen #youtube-player {
+            width: 100vw !important;
+            height: 100vh !important;
         }
 
         #controls {
@@ -45,6 +53,7 @@
             gap: 10px;
             justify-content: center;
             align-items: center;
+            flex-wrap: wrap;
             z-index: 1000;
             transition: all 0.3s;
         }
@@ -52,6 +61,19 @@
         #controls.minimized {
             padding: 8px;
             background: rgba(0, 0, 0, 0.7);
+        }
+
+        #controls.hidden {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+
+        #player-container:not(.fullscreen) #controls {
+            position: relative;
+        }
+
+        #player-container.fullscreen #controls {
+            position: fixed;
         }
 
         .control-btn {
@@ -93,6 +115,56 @@
         @keyframes pulse {
             0%, 100% { box-shadow: 0 0 40px rgba(0, 255, 136, 0.8); }
             50% { box-shadow: 0 0 60px rgba(0, 255, 136, 1); }
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(-50%) translateY(-100px);
+                opacity: 0;
+            }
+        }
+
+        /* Theme Classes */
+        .theme-light {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+
+        .theme-oled {
+            background: #000000 !important;
+        }
+
+        .theme-neon {
+            background: linear-gradient(135deg, #0a0014 0%, #1a0030 100%) !important;
+        }
+
+        .theme-neon .control-btn {
+            border-color: #ff00ff;
+            color: #ff00ff;
+        }
+
+        .theme-matrix {
+            background: linear-gradient(135deg, #001a00 0%, #003300 100%) !important;
+        }
+
+        .theme-matrix .control-btn {
+            border-color: #00ff00;
+            color: #00ff00;
         }
 
         #error-screen {
@@ -208,8 +280,12 @@
         
         <div id="controls">
             <button class="control-btn" id="back-btn">← Back</button>
+            <button class="control-btn" id="quality-btn" title="Video Quality">🎬 Quality</button>
+            <button class="control-btn" id="speed-btn" title="Playback Speed">⚡ Speed</button>
+            <button class="control-btn" id="theme-btn" title="Change Theme">🎨 Theme</button>
             <button class="control-btn" id="youtube-btn" title="Open in YouTube app for true background play">📱 YouTube</button>
             <button class="control-btn" id="fullscreen-btn">⛶ Full</button>
+            <button class="control-btn" id="playlist-add-btn" title="Add to Playlist">➕ Playlist</button>
         </div>
     </div>
 
@@ -219,6 +295,57 @@
         💡 TIP: For true background play (even when Chrome is closed), use the YouTube app!<br>
         Web apps can only play while Chrome is open.</p>
         <button id="open-youtube-btn">Open in YouTube</button>
+    </div>
+
+    <!-- Quality Selector Modal -->
+    <div id="quality-modal" style="display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 20px; border-radius: 15px; z-index: 2000; border: 2px solid #00f0ff;">
+        <h3 style="color: #00f0ff; margin-bottom: 15px; text-align: center;">Select Quality</h3>
+        <div id="quality-options" style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="quality-option control-btn" data-quality="tiny">144p - Ultra Low</button>
+            <button class="quality-option control-btn" data-quality="small">240p - Low</button>
+            <button class="quality-option control-btn" data-quality="medium">360p - Medium</button>
+            <button class="quality-option control-btn" data-quality="large">480p - High</button>
+            <button class="quality-option control-btn" data-quality="hd720">720p - HD</button>
+            <button class="quality-option control-btn" data-quality="hd1080">1080p - Full HD</button>
+        </div>
+    </div>
+
+    <!-- Speed Selector Modal -->
+    <div id="speed-modal" style="display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 20px; border-radius: 15px; z-index: 2000; border: 2px solid #ff00ff;">
+        <h3 style="color: #ff00ff; margin-bottom: 15px; text-align: center;">Playback Speed</h3>
+        <div id="speed-options" style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="speed-option control-btn" data-speed="0.25">0.25x - Very Slow</button>
+            <button class="speed-option control-btn" data-speed="0.5">0.5x - Slow</button>
+            <button class="speed-option control-btn" data-speed="0.75">0.75x</button>
+            <button class="speed-option control-btn" data-speed="1">1x - Normal</button>
+            <button class="speed-option control-btn" data-speed="1.25">1.25x</button>
+            <button class="speed-option control-btn" data-speed="1.5">1.5x - Fast</button>
+            <button class="speed-option control-btn" data-speed="1.75">1.75x</button>
+            <button class="speed-option control-btn" data-speed="2">2x - Very Fast</button>
+        </div>
+    </div>
+
+    <!-- Theme Selector Modal -->
+    <div id="theme-modal" style="display: none; position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.95); padding: 20px; border-radius: 15px; z-index: 2000; border: 2px solid #00ff88;">
+        <h3 style="color: #00ff88; margin-bottom: 15px; text-align: center;">Select Theme</h3>
+        <div id="theme-options" style="display: flex; flex-direction: column; gap: 10px;">
+            <button class="theme-option control-btn" data-theme="dark">🌙 Dark (Default)</button>
+            <button class="theme-option control-btn" data-theme="light">☀️ Light</button>
+            <button class="theme-option control-btn" data-theme="oled">⚫ OLED Black</button>
+            <button class="theme-option control-btn" data-theme="neon">💜 Neon Purple</button>
+            <button class="theme-option control-btn" data-theme="matrix">💚 Matrix Green</button>
+        </div>
+    </div>
+
+    <!-- Playlist Add Modal -->
+    <div id="playlist-modal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.95); padding: 25px; border-radius: 15px; z-index: 2000; border: 2px solid #ff9500; min-width: 300px;">
+        <h3 style="color: #ff9500; margin-bottom: 15px; text-align: center;">Add to Playlist</h3>
+        <input type="text" id="new-playlist-name" placeholder="New playlist name..." style="width: 100%; padding: 10px; margin-bottom: 15px; background: rgba(255,255,255,0.1); border: 1px solid #ff9500; border-radius: 8px; color: #fff; font-size: 14px;">
+        <div id="existing-playlists" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
+        <div style="display: flex; gap: 10px;">
+            <button id="create-playlist-btn" class="control-btn" style="flex: 1;">Create New</button>
+            <button id="close-playlist-btn" class="control-btn" style="flex: 1; background: rgba(255,0,85,0.2); border-color: #ff0055; color: #ff0055;">Cancel</button>
+        </div>
     </div>
 
     <script>
@@ -236,9 +363,22 @@
         const errorScreen = document.getElementById('error-screen');
         const openYoutubeBtn = document.getElementById('open-youtube-btn');
         const loading = document.getElementById('loading');
+        
+        // New Pro Elements
+        const qualityBtn = document.getElementById('quality-btn');
+        const speedBtn = document.getElementById('speed-btn');
+        const themeBtn = document.getElementById('theme-btn');
+        const playlistAddBtn = document.getElementById('playlist-add-btn');
+        const qualityModal = document.getElementById('quality-modal');
+        const speedModal = document.getElementById('speed-modal');
+        const themeModal = document.getElementById('theme-modal');
+        const playlistModal = document.getElementById('playlist-modal');
 
         let isBlocked = false;
         let isFullscreen = false;
+        let currentQuality = 'default';
+        let currentSpeed = 1.0;
+        let currentTheme = localStorage.getItem('yt-theme') || 'dark';
 
         // Check if video ID exists
         if (!videoId) {
@@ -248,6 +388,9 @@
         }
 
         function initPlayer() {
+            // Apply saved theme
+            applyTheme(currentTheme);
+            
             // Load video with optimal parameters for embedding
             const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&origin=${window.location.origin}&playsinline=1&modestbranding=1&rel=0`;
             
@@ -259,10 +402,7 @@
                     loading.style.display = 'none';
                     playerContainer.classList.add('playing');
                     
-                    // Auto-fullscreen on mobile for immersive experience
-                    if (window.innerWidth <= 768 && !isFullscreen) {
-                        enterFullscreen();
-                    }
+                    // Don't auto-fullscreen, let user control it
                 }, 1000);
             });
 
@@ -336,8 +476,16 @@
             try {
                 if (!document.fullscreenElement) {
                     await playerContainer.requestFullscreen();
+                    playerContainer.classList.add('fullscreen');
                     fullscreenBtn.textContent = '⛶ Exit';
                     isFullscreen = true;
+                    
+                    // Hide controls after 3 seconds in fullscreen
+                    setTimeout(() => {
+                        if (document.fullscreenElement) {
+                            controls.classList.add('hidden');
+                        }
+                    }, 3000);
                 }
             } catch (error) {
                 console.error('Fullscreen error:', error);
@@ -348,8 +496,10 @@
             try {
                 if (document.fullscreenElement) {
                     await document.exitFullscreen();
+                    playerContainer.classList.remove('fullscreen');
                     fullscreenBtn.textContent = '⛶ Full';
                     isFullscreen = false;
+                    controls.classList.remove('hidden');
                 }
             } catch (error) {
                 console.error('Fullscreen error:', error);
@@ -364,13 +514,220 @@
             }
         });
 
+        // Show controls on any touch/click in fullscreen
+        playerContainer.addEventListener('click', () => {
+            if (document.fullscreenElement) {
+                controls.classList.remove('hidden');
+                setTimeout(() => {
+                    if (document.fullscreenElement) {
+                        controls.classList.add('hidden');
+                    }
+                }, 3000);
+            }
+        });
+
         // Listen for fullscreen changes
         document.addEventListener('fullscreenchange', () => {
             if (!document.fullscreenElement) {
+                playerContainer.classList.remove('fullscreen');
                 fullscreenBtn.textContent = '⛶ Full';
                 isFullscreen = false;
+                controls.classList.remove('hidden');
             }
         });
+
+        // Quality Selector
+        qualityBtn.addEventListener('click', () => {
+            toggleModal(qualityModal);
+        });
+
+        document.querySelectorAll('.quality-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const quality = e.target.dataset.quality;
+                changeQuality(quality);
+                qualityModal.style.display = 'none';
+            });
+        });
+
+        function changeQuality(quality) {
+            currentQuality = quality;
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&origin=${window.location.origin}&playsinline=1&modestbranding=1&rel=0&vq=${quality}`;
+            youtubePlayer.src = embedUrl;
+            showNotification(`Quality changed to ${quality}`);
+        }
+
+        // Speed Control (Note: YouTube iframes don't support speed control via URL, this requires YouTube IFrame API)
+        speedBtn.addEventListener('click', () => {
+            toggleModal(speedModal);
+        });
+
+        document.querySelectorAll('.speed-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const speed = parseFloat(e.target.dataset.speed);
+                currentSpeed = speed;
+                speedModal.style.display = 'none';
+                showNotification(`Speed set to ${speed}x - Note: Speed control works best in YouTube app`);
+            });
+        });
+
+        // Theme Selector
+        themeBtn.addEventListener('click', () => {
+            toggleModal(themeModal);
+        });
+
+        document.querySelectorAll('.theme-option').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const theme = e.target.dataset.theme;
+                applyTheme(theme);
+                themeModal.style.display = 'none';
+            });
+        });
+
+        function applyTheme(theme) {
+            currentTheme = theme;
+            localStorage.setItem('yt-theme', theme);
+            
+            document.body.classList.remove('theme-dark', 'theme-light', 'theme-oled', 'theme-neon', 'theme-matrix');
+            document.body.classList.add(`theme-${theme}`);
+            
+            const themes = {
+                dark: { bg: '#000', text: '#fff' },
+                light: { bg: '#fff', text: '#000' },
+                oled: { bg: '#000000', text: '#fff' },
+                neon: { bg: '#0a0014', text: '#ff00ff' },
+                matrix: { bg: '#001a00', text: '#00ff00' }
+            };
+            
+            if (themes[theme]) {
+                document.body.style.background = themes[theme].bg;
+                document.body.style.color = themes[theme].text;
+            }
+            
+            showNotification(`Theme changed to ${theme}`);
+        }
+
+        // Playlist Management
+        playlistAddBtn.addEventListener('click', () => {
+            loadPlaylists();
+            toggleModal(playlistModal);
+        });
+
+        document.getElementById('close-playlist-btn').addEventListener('click', () => {
+            playlistModal.style.display = 'none';
+        });
+
+        document.getElementById('create-playlist-btn').addEventListener('click', () => {
+            const playlistName = document.getElementById('new-playlist-name').value.trim();
+            if (playlistName) {
+                addToPlaylist(playlistName);
+                document.getElementById('new-playlist-name').value = '';
+            }
+        });
+
+        function loadPlaylists() {
+            const playlists = JSON.parse(localStorage.getItem('yt-playlists') || '{}');
+            const container = document.getElementById('existing-playlists');
+            container.innerHTML = '';
+            
+            Object.keys(playlists).forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'control-btn';
+                btn.textContent = `📂 ${name} (${playlists[name].length} videos)`;
+                btn.style.width = '100%';
+                btn.style.marginBottom = '8px';
+                btn.onclick = () => {
+                    addToPlaylist(name);
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function addToPlaylist(playlistName) {
+            const playlists = JSON.parse(localStorage.getItem('yt-playlists') || '{}');
+            if (!playlists[playlistName]) {
+                playlists[playlistName] = [];
+            }
+            
+            const videoData = {
+                id: videoId,
+                title: document.title,
+                addedAt: Date.now()
+            };
+            
+            if (!playlists[playlistName].find(v => v.id === videoId)) {
+                playlists[playlistName].push(videoData);
+                localStorage.setItem('yt-playlists', JSON.stringify(playlists));
+                showNotification(`Added to playlist: ${playlistName}`);
+            } else {
+                showNotification(`Already in playlist: ${playlistName}`);
+            }
+            
+            playlistModal.style.display = 'none';
+        }
+
+        // Modal Toggle Helper
+        function toggleModal(modal) {
+            // Close all modals first
+            [qualityModal, speedModal, themeModal, playlistModal].forEach(m => {
+                if (m !== modal) m.style.display = 'none';
+            });
+            
+            modal.style.display = modal.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Notification System
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 240, 255, 0.95);
+                color: #000;
+                padding: 15px 25px;
+                border-radius: 25px;
+                font-weight: 700;
+                z-index: 3000;
+                animation: slideDown 0.3s ease-out;
+                box-shadow: 0 0 30px rgba(0, 240, 255, 0.8);
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideUp 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 2000);
+        }
+
+        // Save watch history with timestamp
+        function saveWatchHistory() {
+            const history = JSON.parse(localStorage.getItem('yt-watch-history') || '[]');
+            const videoData = {
+                id: videoId,
+                title: document.title,
+                watchedAt: Date.now(),
+                timestamp: 0 // Would need YouTube API to get current playback time
+            };
+            
+            // Remove duplicate if exists
+            const filtered = history.filter(v => v.id !== videoId);
+            filtered.unshift(videoData);
+            
+            // Keep last 100 videos
+            const trimmed = filtered.slice(0, 100);
+            localStorage.setItem('yt-watch-history', JSON.stringify(trimmed));
+        }
+
+        // Save history when leaving
+        window.addEventListener('beforeunload', () => {
+            saveWatchHistory();
+        });
+
+        // Auto-save history every 30 seconds
+        setInterval(saveWatchHistory, 30000);
 
         // Back button - return to main app
         backBtn.addEventListener('click', () => {

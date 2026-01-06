@@ -107,6 +107,18 @@
                 <span class="icon icon-home"></span>
                 <span class="nav-label">Home</span>
             </button>
+            <button class="nav-btn" data-page="playlists">
+                <span class="icon icon-music"></span>
+                <span class="nav-label">Playlists</span>
+            </button>
+            <button class="nav-btn" data-page="history">
+                <span class="icon icon-fire"></span>
+                <span class="nav-label">History</span>
+            </button>
+            <button class="nav-btn" data-page="stats">
+                <span class="icon icon-gaming"></span>
+                <span class="nav-label">Stats</span>
+            </button>
             <button class="nav-btn" data-page="saved">
                 <span class="icon icon-save"></span>
                 <span class="nav-label">Saved</span>
@@ -117,6 +129,61 @@
             </button>
         </nav>
 
+        <!-- Playlists Section -->
+        <section id="playlists-section" class="section-page" style="display: none;">
+            <div class="page-header">
+                <h2><span class="icon icon-music"></span> My Playlists</h2>
+                <button id="create-new-playlist-btn" class="btn-primary">+ Create Playlist</button>
+            </div>
+            <div id="playlists-container" class="playlists-grid"></div>
+        </section>
+
+        <!-- History Section -->
+        <section id="history-section" class="section-page" style="display: none;">
+            <div class="page-header">
+                <h2><span class="icon icon-fire"></span> Watch History</h2>
+                <button id="clear-history-btn" class="btn-danger">Clear All</button>
+            </div>
+            <div id="history-container" class="video-grid"></div>
+        </section>
+
+        <!-- Stats Section -->
+        <section id="stats-section" class="section-page" style="display: none;">
+            <div class="page-header">
+                <h2><span class="icon icon-gaming"></span> Statistics</h2>
+            </div>
+            <div class="stats-dashboard">
+                <div class="stat-card">
+                    <h3>Total Watch Time</h3>
+                    <p id="total-watch-time" class="stat-value">0 hours</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Videos Watched</h3>
+                    <p id="videos-watched" class="stat-value">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Favorite Category</h3>
+                    <p id="favorite-category" class="stat-value">Music</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Playlists Created</h3>
+                    <p id="playlists-count" class="stat-value">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Videos Saved</h3>
+                    <p id="saved-count" class="stat-value">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>Active Days</h3>
+                    <p id="active-days" class="stat-value">0</p>
+                </div>
+            </div>
+            <div class="stats-chart" style="margin-top: 30px;">
+                <h3>Top Categories</h3>
+                <div id="category-chart" class="chart-container"></div>
+            </div>
+        </section>
+
         <!-- Settings Modal -->
         <div id="settings-modal" class="modal" style="display: none;">
             <div class="modal-content">
@@ -125,6 +192,18 @@
                     <button class="close-modal"><span class="icon icon-close"></span></button>
                 </div>
                 <div class="modal-body">
+                    <div class="setting-item">
+                        <label>
+                            Theme:
+                            <select id="theme-selector">
+                                <option value="dark">🌙 Dark (Default)</option>
+                                <option value="light">☀️ Light</option>
+                                <option value="oled">⚫ OLED Black</option>
+                                <option value="neon">💜 Neon Purple</option>
+                                <option value="matrix">💚 Matrix Green</option>
+                            </select>
+                        </label>
+                    </div>
                     <div class="setting-item">
                         <label>
                             <input type="checkbox" id="auto-quality" checked>
@@ -145,24 +224,54 @@
                     </div>
                     <div class="setting-item">
                         <label>
+                            <input type="checkbox" id="autoplay-next" checked>
+                            Autoplay Next Video
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
                             Video Quality:
                             <select id="default-quality">
                                 <option value="auto">Auto</option>
-                                <option value="small">144p (Fastest)</option>
+                                <option value="tiny">144p (Fastest)</option>
+                                <option value="small">240p</option>
                                 <option value="medium">360p (Balanced)</option>
                                 <option value="large">480p</option>
-                                <option value="hd720">720p</option>
+                                <option value="hd720">720p HD</option>
+                                <option value="hd1080">1080p Full HD</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <label>
+                            Default Speed:
+                            <select id="default-speed">
+                                <option value="0.5">0.5x - Slow</option>
+                                <option value="0.75">0.75x</option>
+                                <option value="1" selected>1x - Normal</option>
+                                <option value="1.25">1.25x</option>
+                                <option value="1.5">1.5x - Fast</option>
+                                <option value="1.75">1.75x</option>
+                                <option value="2">2x - Very Fast</option>
                             </select>
                         </label>
                     </div>
                     <div class="setting-item">
                         <button id="clear-cache-btn" class="btn-danger">Clear Cache</button>
+                        <button id="export-data-btn" class="btn-primary">Export Data</button>
                     </div>
                     <div class="setting-item">
-                        <label>API Key:
-                            <input type="text" id="api-key-input" placeholder="Enter YouTube API Key">
+                        <label>YouTube API Key (Optional):
+                            <input type="text" id="api-key-input" placeholder="Enter your API key or leave hardcoded">
                       </label>
-                        <button id="save-api-key" class="btn-primary">Save Key</button>
+                        <button id="save-api-key-btn" class="btn-primary">Save Custom Key</button>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 5px;">✓ Default API key is already embedded. Only change if you have your own key.</p>
+                    </div>
+                    <div class="setting-item">
+                        <p style="font-size: 11px; color: var(--text-secondary); text-align: center;">
+                            FastTube Pro v2.0 - Premium Features Enabled<br>
+                            Quality Selector • Speed Control • Playlists • Themes • Statistics
+                        </p>
                     </div>
                 </div>
             </div>
@@ -174,6 +283,7 @@
     <script src="js/api.js"></script>
     <script src="js/player.js"></script>
     <script src="js/storage.js"></script>
+    <script src="js/pro-features.js"></script>
     <script src="js/app.js"></script>
     <script src="js/pwa.js"></script>
 </body>

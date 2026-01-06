@@ -11,6 +11,8 @@ class FastTubeApp {
     // Initialize app
     async init() {
         console.log('Initializing FastTube...');
+        console.log('API Key loaded:', CONFIG.API_KEY ? 'Yes' : 'No');
+        console.log('API Key length:', CONFIG.API_KEY ? CONFIG.API_KEY.length : 0);
         
         // Setup event listeners FIRST (critical for responsiveness)
         this.setupEventListeners();
@@ -22,11 +24,18 @@ class FastTubeApp {
         this.hideLoadingScreen();
         
         // Check API key and load content
-        if (CONFIG.API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE') {
+        if (!CONFIG.API_KEY || CONFIG.API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE' || CONFIG.API_KEY.length < 20) {
             this.showAPIKeyPrompt();
+            // Still load demo content
+            this.showDemoVideos();
         } else {
             // Load trending videos
-            await this.loadTrendingVideos();
+            try {
+                await this.loadTrendingVideos();
+            } catch (error) {
+                console.error('Failed to load videos:', error);
+                this.showDemoVideos();
+            }
         }
     }
 
@@ -71,43 +80,83 @@ class FastTubeApp {
         });
         
         // Player controls
-        document.getElementById('close-player').addEventListener('click', () => {
-            videoPlayer.closePlayer();
-        });
+        const closePlayer = document.getElementById('close-player');
+        const pipBtn = document.getElementById('picture-in-picture');
+        const bgPlayBtn = document.getElementById('background-play');
+        const downloadBtn = document.getElementById('download-btn');
         
-        document.getElementById('picture-in-picture').addEventListener('click', () => {
-            videoPlayer.enablePiP();
-        });
+        if (closePlayer) {
+            closePlayer.addEventListener('click', () => {
+                videoPlayer.closePlayer();
+            });
+        }
         
-        document.getElementById('background-play').addEventListener('click', () => {
-            videoPlayer.startBackgroundPlay();
-        });
+        if (pipBtn) {
+            pipBtn.addEventListener('click', () => {
+                videoPlayer.enablePiP();
+            });
+        }
         
-        document.getElementById('download-btn').addEventListener('click', () => {
-            videoPlayer.downloadVideo();
-        });
+        if (bgPlayBtn) {
+            bgPlayBtn.addEventListener('click', () => {
+                videoPlayer.startBackgroundPlay();
+            });
+        }
+        
+        if (downloadBtn) {
+            downloadBtn.addEventListener('click', () => {
+                videoPlayer.downloadVideo();
+            });
+        }
         
         // Settings
-        document.querySelector('[data-page="settings"]').addEventListener('click', () => {
-            this.showSettings();
-        });
+        const settingsBtn = document.querySelector('[data-page="settings"]');
+        const closeModal = document.querySelector('.close-modal');
+        const clearCacheBtn = document.getElementById('clear-cache-btn');
+        const exportDataBtn = document.getElementById('export-data-btn');
         
-        document.querySelector('.close-modal').addEventListener('click', () => {
-            document.getElementById('settings-modal').style.display = 'none';
-        });
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', () => {
+                this.showSettings();
+            });
+        }
         
-        document.getElementById('clear-cache-btn').addEventListener('click', () => {
-            this.clearCache();
-        });
+        if (closeModal) {
+            closeModal.addEventListener('click', () => {
+                document.getElementById('settings-modal').style.display = 'none';
+            });
+        }
         
-        document.getElementById('save-api-key').addEventListener('click', () => {
-            this.saveAPIKey();
-        });
+        if (clearCacheBtn) {
+            clearCacheBtn.addEventListener('click', () => {
+                this.clearCache();
+            });
+        }
+        
+        if (exportDataBtn) {
+            exportDataBtn.addEventListener('click', () => {
+                if (window.proFeatures) {
+                    proFeatures.exportUserData();
+                }
+            });
+        }
+        
+        const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+        if (saveApiKeyBtn) {
+            saveApiKeyBtn.addEventListener('click', () => {
+                this.saveAPIKey();
+            });
+        }
         
         // Load more
-        document.getElementById('load-more-btn').addEventListener('click', () => {
-            this.loadMore();
-        });
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', () => {
+                this.loadMore();
+            });
+        }
+        
+        console.log('Event listeners setup complete');
     }
 
     // Show loading screen
@@ -249,6 +298,15 @@ class FastTubeApp {
     // Play video
     playVideo(videoId, title) {
         videoPlayer.showPlayer(videoId, title);
+        
+        // Add to watch history
+        if (window.proFeatures) {
+            proFeatures.addToHistory({
+                id: videoId,
+                title: title,
+                category: this.currentFilter
+            });
+        }
     }
 
     // Load more videos
@@ -293,12 +351,37 @@ class FastTubeApp {
         document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
         e.currentTarget.classList.add('active');
         
+        // Hide all sections
+        document.querySelector('.results-section').style.display = 'none';
+        document.getElementById('saved-section').style.display = 'none';
+        const playlistsSection = document.getElementById('playlists-section');
+        const historySection = document.getElementById('history-section');
+        const statsSection = document.getElementById('stats-section');
+        
+        if (playlistsSection) playlistsSection.style.display = 'none';
+        if (historySection) historySection.style.display = 'none';
+        if (statsSection) statsSection.style.display = 'none';
+        
         // Show appropriate section
         if (page === 'home') {
             document.querySelector('.results-section').style.display = 'block';
-            document.getElementById('saved-section').style.display = 'none';
         } else if (page === 'saved') {
             this.showSavedVideos();
+        } else if (page === 'playlists') {
+            if (playlistsSection) {
+                playlistsSection.style.display = 'block';
+                if (window.proFeatures) proFeatures.renderPlaylists();
+            }
+        } else if (page === 'history') {
+            if (historySection) {
+                historySection.style.display = 'block';
+                if (window.proFeatures) proFeatures.renderHistory();
+            }
+        } else if (page === 'stats') {
+            if (statsSection) {
+                statsSection.style.display = 'block';
+                if (window.proFeatures) proFeatures.renderStats();
+            }
         } else if (page === 'settings') {
             this.showSettings();
         }
@@ -338,16 +421,27 @@ class FastTubeApp {
     // Show settings
     showSettings() {
         const modal = document.getElementById('settings-modal');
-        modal.style.display = 'flex';
-        
-        const settings = storage.getSettings();
-        document.getElementById('auto-quality').checked = settings.autoQuality;
-        document.getElementById('background-play-enabled').checked = settings.backgroundPlayEnabled;
-        document.getElementById('save-history').checked = settings.saveHistory;
-        document.getElementById('default-quality').value = settings.defaultQuality;
-        
-        const apiKey = localStorage.getItem('youtube_api_key') || '';
-        document.getElementById('api-key-input').value = apiKey;
+        if (modal) {
+            modal.style.display = 'flex';
+            
+            const settings = storage.getSettings();
+            const autoQuality = document.getElementById('auto-quality');
+            const bgPlay = document.getElementById('background-play-enabled');
+            const saveHistory = document.getElementById('save-history');
+            const defaultQuality = document.getElementById('default-quality');
+            
+            if (autoQuality) autoQuality.checked = settings.autoQuality;
+            if (bgPlay) bgPlay.checked = settings.backgroundPlayEnabled;
+            if (saveHistory) saveHistory.checked = settings.saveHistory;
+            if (defaultQuality) defaultQuality.value = settings.defaultQuality;
+            
+            const apiKeyInput = document.getElementById('api-key-input');
+            if (apiKeyInput) {
+                const customKey = localStorage.getItem('youtube_api_key_custom') || '';
+                apiKeyInput.value = customKey;
+                apiKeyInput.placeholder = customKey ? 'Custom API key set' : 'Using default embedded key';
+            }
+        }
     }
 
     // Load settings
@@ -372,13 +466,23 @@ class FastTubeApp {
 
     // Save API key
     saveAPIKey() {
-        const apiKey = document.getElementById('api-key-input').value.trim();
-        if (apiKey) {
-            saveAPIKey(apiKey);
-            alert('API Key saved! Reloading app...');
-            location.reload();
+        const apiKeyInput = document.getElementById('api-key-input');
+        if (!apiKeyInput) return;
+        
+        const apiKey = apiKeyInput.value.trim();
+        if (apiKey && apiKey.length > 20) {
+            // Save custom API key
+            localStorage.setItem('youtube_api_key_custom', apiKey);
+            CONFIG.API_KEY = apiKey;
+            alert('✓ Custom API Key saved! Reloading app...');
+            setTimeout(() => location.reload(), 1000);
+        } else if (apiKey === '') {
+            // Clear custom key and use default
+            localStorage.removeItem('youtube_api_key_custom');
+            alert('✓ Cleared custom key. Using default embedded key.');
+            setTimeout(() => location.reload(), 1000);
         } else {
-            alert('Please enter a valid API key');
+            alert('⚠️ Please enter a valid API key (minimum 20 characters) or leave empty to use default.');
         }
     }
 
@@ -434,14 +538,96 @@ class FastTubeApp {
 
 // Initialize app when DOM is ready
 let app;
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+let proFeatures;
+let youtubeAPI;
+let videoPlayer;
+let storage;
+
+// Initialize core objects first
+function initializeCore() {
+    try {
+        console.log('Initializing core objects...');
+        
+        // Initialize API
+        if (typeof YouTubeAPI !== 'undefined') {
+            youtubeAPI = new YouTubeAPI();
+            console.log('YouTube API initialized');
+        } else {
+            console.error('YouTubeAPI class not found!');
+        }
+        
+        // Initialize Storage
+        if (typeof Storage !== 'undefined') {
+            storage = new Storage();
+            console.log('Storage initialized');
+        } else {
+            console.warn('Storage class not found, using fallback');
+            // Fallback storage
+            storage = {
+                getSavedVideos: () => [],
+                addToHistory: () => {},
+                getSettings: () => ({
+                    autoQuality: true,
+                    backgroundPlayEnabled: true,
+                    saveHistory: true,
+                    defaultQuality: 'medium'
+                }),
+                saveSettings: () => {},
+                clearCache: () => {}
+            };
+        }
+        
+        // Initialize Video Player
+        if (typeof VideoPlayer !== 'undefined') {
+            videoPlayer = new VideoPlayer();
+            console.log('Video Player initialized');
+        } else {
+            console.warn('VideoPlayer class not found, using fallback');
+            // Fallback player
+            videoPlayer = {
+                showPlayer: (id, title) => {
+                    window.location.href = `player.html?v=${id}`;
+                },
+                closePlayer: () => {},
+                enablePiP: () => {},
+                startBackgroundPlay: () => {},
+                downloadVideo: () => {}
+            };
+        }
+        
+        // Initialize App
         app = new FastTubeApp();
-        app.init();
-    });
+        console.log('FastTubeApp initialized');
+        app.init().catch(err => {
+            console.error('App init error:', err);
+            // Force show app even on error
+            document.getElementById('loading-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+        });
+        
+        // Initialize Pro Features if available
+        if (typeof ProFeatures !== 'undefined') {
+            proFeatures = new ProFeatures();
+            proFeatures.init();
+            window.proFeatures = proFeatures;
+            console.log('Pro Features initialized');
+        } else {
+            console.warn('ProFeatures not available');
+        }
+        
+    } catch (error) {
+        console.error('Initialization error:', error);
+        // Force show app even on error
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        alert('App loaded with limited functionality. Some features may not work.');
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCore);
 } else {
-    app = new FastTubeApp();
-    app.init();
+    initializeCore();
 }
 
 // Save settings when checkboxes change
@@ -451,6 +637,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const element = document.getElementById(id);
         if (element) {
             element.addEventListener('change', () => {
+                if (app) app.saveSettings();
+            });
+        }
+    });
+});
                 if (app) app.saveSettings();
             });
         }
