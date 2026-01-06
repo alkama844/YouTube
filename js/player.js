@@ -18,217 +18,63 @@ class VideoPlayer {
         
         // Create wrapper
         const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'width: 100%; height: 100%; background: linear-gradient(135deg, var(--bg-color) 0%, var(--surface-color) 100%); position: relative;';
+        wrapper.style.cssText = 'width: 100%; height: 100%; background: #000; position: relative;';
         wrapper.id = 'player-wrapper';
         
-        // Try embed first, with instant fallback option
-        this.showUniversalPlayer(videoId, wrapper);
-        
-        playerContainer.appendChild(wrapper);
-    }
-    
-    // Show universal player with embed + instant watch options
-    showUniversalPlayer(videoId, wrapper) {
         const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
         const mobileUrl = `https://m.youtube.com/watch?v=${videoId}`;
-        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&playsinline=1&fs=1`;
+        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&fs=1`;
         
+        // SIMPLE SOLUTION: Big prominent buttons + embed below
         wrapper.innerHTML = `
             <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-                <!-- Embed iframe attempt -->
-                <div id="embed-container" style="flex: 1; position: relative; background: #000;">
+                <!-- ALWAYS VISIBLE WATCH OPTIONS (Top Priority) -->
+                <div style="background: linear-gradient(135deg, #1a1a2e, #141420); border-bottom: 2px solid var(--neon-blue); padding: 16px; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="text-align: center; color: var(--text-primary); font-size: 14px; font-weight: 600; margin-bottom: 5px;">
+                        🎬 Watch This Video:
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer"
+                           style="flex: 1; min-width: 140px; background: linear-gradient(135deg, #FF0000, #CC0000); color: white; padding: 14px 20px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 700; text-align: center; box-shadow: 0 4px 15px rgba(255,0,0,0.5); transition: all 0.2s; border: 2px solid #FF0000;"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255,0,0,0.7)'"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255,0,0,0.5)'">
+                            ▶️ YouTube.com
+                        </a>
+                        <a href="${mobileUrl}" target="_blank" rel="noopener noreferrer"
+                           style="flex: 1; min-width: 140px; background: var(--neon-blue); color: white; padding: 14px 20px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 700; text-align: center; box-shadow: 0 0 20px var(--primary-glow); transition: all 0.2s; border: 2px solid var(--neon-blue);"
+                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 0 30px var(--primary-glow)'"
+                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 20px var(--primary-glow)'">
+                            📱 Mobile
+                        </a>
+                    </div>
+                    <button onclick="navigator.clipboard.writeText('${youtubeUrl}').then(() => { this.innerHTML = '✅ Copied!'; setTimeout(() => this.innerHTML = '📋 Copy Link', 2000); }).catch(() => prompt('Copy this URL:', '${youtubeUrl}'))" 
+                       style="background: var(--surface-color); color: var(--neon-green); padding: 10px; border-radius: 8px; border: 1px solid var(--neon-green); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                       onmouseover="this.style.background='var(--surface-hover)'"
+                       onmouseout="this.style.background='var(--surface-color)'">
+                        📋 Copy Link
+                    </button>
+                </div>
+                
+                <!-- Embed attempt (may or may not work) -->
+                <div style="flex: 1; position: relative; background: #000;">
                     <iframe 
-                        id="youtube-iframe"
                         style="width: 100%; height: 100%; border: none;" 
                         src="${embedUrl}"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
                         allowfullscreen
                         referrerpolicy="no-referrer-when-downgrade">
                     </iframe>
-                    
-                    <!-- Quick action overlay (shows on load) -->
-                    <div id="quick-actions" style="position: absolute; top: 0; left: 0; right: 0; padding: 15px; background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, transparent 100%); z-index: 10; display: flex; gap: 8px; flex-wrap: wrap;">
-                        <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer"
-                           style="background: #FF0000; color: white; padding: 10px 20px; border-radius: 8px; text-decoration: none; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(255,0,0,0.4); transition: all 0.2s;"
-                           onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(255,0,0,0.6)'"
-                           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 10px rgba(255,0,0,0.4)'">
-                            ▶ Watch on YouTube
-                        </a>
-                        <button onclick="document.getElementById('embed-container').requestFullscreen().catch(e => alert('Fullscreen not available'))" 
-                           style="background: rgba(255,255,255,0.2); color: white; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); font-size: 13px; font-weight: 600; cursor: pointer; backdrop-filter: blur(10px);"
-                           onmouseover="this.style.background='rgba(255,255,255,0.3)'"
-                           onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                            ⛶ Fullscreen
-                        </button>
-                        <button onclick="navigator.clipboard.writeText('${youtubeUrl}').then(() => alert('✅ Link copied!')).catch(() => prompt('Copy:', '${youtubeUrl}'))" 
-                           style="background: rgba(255,255,255,0.2); color: white; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.3); font-size: 13px; font-weight: 600; cursor: pointer; backdrop-filter: blur(10px);"
-                           onmouseover="this.style.background='rgba(255,255,255,0.3)'"
-                           onmouseout="this.style.background='rgba(255,255,255,0.2)'">
-                            📋 Copy
-                        </button>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: rgba(255,255,255,0.5); font-size: 12px; pointer-events: none;">
+                        ⬆️ If video doesn't load, use buttons above
                     </div>
                 </div>
-                
-                <!-- Alternative watch options bar -->
-                <div style="background: var(--surface-color); border-top: 1px solid var(--border-color); padding: 12px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <span style="font-size: 12px; color: var(--text-secondary); font-weight: 600;">📱 Can't play?</span>
-                    <a href="${mobileUrl}" target="_blank" rel="noopener noreferrer"
-                       style="background: var(--neon-blue); color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 700; box-shadow: 0 0 15px var(--primary-glow);">
-                        Mobile YouTube
-                    </a>
-                    <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer"
-                       style="background: var(--surface-hover); color: var(--neon-green); padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 12px; font-weight: 700; border: 1px solid var(--neon-green);">
-                        Desktop YouTube
-                    </a>
-                </div>
             </div>
         `;
         
-        // Check if embed loads successfully
-        setTimeout(() => {
-            const iframe = document.getElementById('youtube-iframe');
-            if (iframe) {
-                // If iframe has issues, highlight the quick actions
-                iframe.addEventListener('error', () => {
-                    const quickActions = document.getElementById('quick-actions');
-                    if (quickActions) {
-                        quickActions.style.background = 'rgba(255, 0, 0, 0.9)';
-                        quickActions.innerHTML = `<div style="flex: 1; text-align: center; color: white; font-weight: 700;">⚠️ Embedding blocked - Use buttons below to watch</div>`;
-                    }
-                });
-            }
-        }, 1000);
+        playerContainer.appendChild(wrapper);
+        this.player = wrapper;
     }
     
-    // Show fallback player with alternative options
-    showFallbackPlayer(videoId, wrapper) {
-        const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        const mobileUrl = `https://m.youtube.com/watch?v=${videoId}`;
-        const appUrl = `vnd.youtube://${videoId}`;
-        
-        wrapper.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 350px; padding: 20px; text-align: center; color: var(--text-primary); background: linear-gradient(135deg, var(--surface-color) 0%, var(--bg-color) 100%);">
-                <div style="width: 80px; height: 80px; margin-bottom: 20px; position: relative;">
-                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--neon-orange); border-radius: 50%; opacity: 0.3;"></div>
-                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--neon-orange); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; border-top-color: transparent;"></div>
-                    <svg style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-orange)" stroke-width="2.5">
-                        <circle cx="12" cy="12" r="10"/>
-                        <line x1="12" y1="8" x2="12" y2="12"/>
-                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                    </svg>
-                </div>
-                
-                <h3 style="margin-bottom: 10px; font-size: 19px; color: var(--neon-orange); font-weight: 700;">⚠️ Embedding Disabled</h3>
-                <p style="color: var(--text-primary); margin-bottom: 8px; font-size: 14px; max-width: 420px; line-height: 1.5; font-weight: 500;">
-                    This video owner has disabled playback on external websites (Error 153)
-                </p>
-                <p style="color: var(--text-secondary); margin-bottom: 25px; font-size: 12px; max-width: 420px; line-height: 1.4;">
-                    <strong style="color: var(--neon-blue);">We use iframe (the only way to embed)</strong>, but the video creator blocked it. Choose an option below:
-                </p>
-                
-                <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 400px; margin-bottom: 15px;">
-                    <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer" 
-                       style="background: linear-gradient(135deg, #FF0000, #CC0000); 
-                              color: white; padding: 16px 24px; border-radius: 12px; text-decoration: none; 
-                              font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px;
-                              box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4); transition: all 0.3s ease;
-                              border: 2px solid #FF0000; font-size: 15px;"
-                       onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 30px rgba(255, 0, 0, 0.6)'"
-                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(255, 0, 0, 0.4)'">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                            <polygon points="5 3 19 12 5 21 5 3"/>
-                        </svg>
-                        Open on YouTube.com
-                    </a>
-                    
-                    <a href="${mobileUrl}" target="_blank" rel="noopener noreferrer" 
-                       style="background: var(--surface-color); 
-                              color: var(--neon-blue); padding: 14px 24px; border-radius: 12px; text-decoration: none; 
-                              font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;
-                              border: 2px solid var(--neon-blue); transition: all 0.3s ease; font-size: 14px;"
-                       onmouseover="this.style.background='var(--surface-hover)'; this.style.boxShadow='0 0 20px var(--primary-glow)'"
-                       onmouseout="this.style.background='var(--surface-color)'; this.style.boxShadow='none'">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                            <line x1="12" y1="18" x2="12.01" y2="18"/>
-                        </svg>
-                        Mobile YouTube
-                    </a>
-                    
-                    <button onclick="navigator.clipboard.writeText('${youtubeUrl}').then(() => alert('✅ Link copied! Paste it in your browser or YouTube app')).catch(() => prompt('Copy this link:', '${youtubeUrl}'))" 
-                       style="background: var(--surface-color); 
-                              color: var(--neon-green); padding: 14px 24px; border-radius: 12px; 
-                              font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;
-                              border: 2px solid var(--neon-green); transition: all 0.3s ease; font-size: 14px; cursor: pointer;"
-                       onmouseover="this.style.background='var(--surface-hover)'; this.style.boxShadow='0 0 20px var(--accent-glow)'"
-                       onmouseout="this.style.background='var(--surface-color)'; this.style.boxShadow='none'">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                        </svg>
-                        Copy Video Link
-                    </button>
-                </div>
-                
-                <div style="padding: 15px; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--neon-blue); border-radius: 10px; margin-top: 15px; max-width: 400px;">
-                    <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
-                        <strong style="color: var(--neon-blue);">💡 Why this happens:</strong><br>
-                        YouTube allows creators to disable embedding (iframe) for their videos. FastTube respects these restrictions. The buttons above will open the video where it CAN play.
-                    </p>
-                </div>
-                
-                <button onclick="videoPlayer.tryAlternativeEmbed('${videoId}')" 
-                        style="background: transparent; color: var(--text-secondary); 
-                               padding: 10px 20px; border: 1px solid var(--border-color); 
-                               border-radius: 8px; cursor: pointer; font-size: 12px; 
-                               transition: all 0.3s ease; margin-top: 12px;"
-                        onmouseover="this.style.color='var(--neon-pink)'; this.style.borderColor='var(--neon-pink)'"
-                        onmouseout="this.style.color='var(--text-secondary)'; this.style.borderColor='var(--border-color)'">
-                    🔄 Try Alternative Embed (rarely works)
-                </button>
-                
-                <style>
-                    @keyframes ping {
-                        75%, 100% {
-                            transform: scale(1.5);
-                            opacity: 0;
-                        }
-                    }
-                </style>
-            </div>
-        `;
-    }
-    
-    // Try alternative embed method
-    tryAlternativeEmbed(videoId) {
-        const wrapper = document.getElementById('player-wrapper');
-        if (!wrapper) return;
-        
-        // Try nocookie domain as alternative
-        wrapper.innerHTML = `
-            <iframe 
-                style="width: 100%; height: 100%; border: none;" 
-                src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=1&fs=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1" 
-                allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope" 
-                allowfullscreen
-                referrerpolicy="no-referrer-when-downgrade">
-            </iframe>
-        `;
-        
-        // Show success message
-        const msg = document.createElement('div');
-        msg.style.cssText = 'position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: var(--success-color); color: white; padding: 8px 16px; border-radius: 8px; font-size: 12px; z-index: 100; animation: fadeOut 3s forwards;';
-        msg.textContent = 'Trying alternative embed...';
-        wrapper.appendChild(msg);
-        
-        // Check again after 3 seconds
-        setTimeout(() => {
-            const iframe = wrapper.querySelector('iframe');
-            if (!iframe || iframe.clientHeight === 0) {
-                this.showFallbackPlayer(videoId, wrapper);
-            }
-        }, 3000);
-    }
 
     // Show player section
     showPlayer(videoId, title) {
