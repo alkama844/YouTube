@@ -424,8 +424,8 @@ class ProFeatures {
     }
 }
 
-// Initialize Pro Features
-const proFeatures = new ProFeatures();
+// Note: ProFeatures is initialized in app.js
+// This allows proper initialization order with other modules
 
 // Add keyboard shortcut hints
 document.addEventListener('keydown', (e) => {
