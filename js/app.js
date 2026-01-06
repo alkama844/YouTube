@@ -642,8 +642,4 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-                if (app) app.saveSettings();
-            });
-        }
-    });
-});
+
