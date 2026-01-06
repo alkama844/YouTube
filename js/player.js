@@ -8,7 +8,7 @@ class VideoPlayer {
         this.embedCheckTimeout = null;
     }
 
-    // Fast YouTube player with full features
+    // Fast YouTube player with multiple fallback methods
     async initPlayer(videoId, quality = 'default') {
         this.currentVideoId = videoId;
         const playerContainer = document.getElementById('video-player');
@@ -16,19 +16,59 @@ class VideoPlayer {
         // Clear previous content
         playerContainer.innerHTML = '';
         
-        // Create optimized iframe
-        const iframe = document.createElement('iframe');
-        iframe.id = 'youtube-iframe';
-        iframe.style.cssText = 'width: 100%; height: 100%; border: none; background: #000;';
-        iframe.setAttribute('allowfullscreen', '');
-        iframe.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
-        iframe.setAttribute('loading', 'eager');
+        // Create container with multiple player options
+        const container = document.createElement('div');
+        container.style.cssText = 'width: 100%; height: 100%; background: #000; position: relative;';
         
-        // Optimized embed URL for speed
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+        // Try multiple embed methods simultaneously for speed
+        container.innerHTML = `
+            <div style="width: 100%; height: 100%; position: relative;">
+                <!-- Primary YouTube Embed -->
+                <iframe 
+                    id="youtube-iframe"
+                    style="width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0;" 
+                    src="https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&playsinline=1"
+                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
+                    allowfullscreen
+                    loading="eager">
+                </iframe>
+                
+                <!-- Fallback: Direct YouTube watch link -->
+                <div id="fallback-layer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--surface-color), var(--bg-color)); display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 20px;">
+                    <div style="text-align: center; max-width: 400px;">
+                        <div style="font-size: 48px; margin-bottom: 20px;">🎬</div>
+                        <h3 style="color: var(--neon-blue); margin-bottom: 12px; font-size: 18px;">Video Ready</h3>
+                        <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">This video has playback restrictions. Tap below to watch:</p>
+                        <a href="https://www.youtube.com/watch?v=${videoId}" 
+                           target="_blank" 
+                           rel="noopener noreferrer"
+                           style="display: inline-block; background: linear-gradient(135deg, #FF0000, #CC0000); color: white; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: 700; box-shadow: 0 4px 20px rgba(255,0,0,0.5); transition: all 0.3s;"
+                           onmouseover="this.style.transform='scale(1.05)'"
+                           onmouseout="this.style.transform='scale(1)'">
+                            ▶️ Watch Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
         
-        playerContainer.appendChild(iframe);
-        this.player = iframe;
+        playerContainer.appendChild(container);
+        this.player = container;
+        
+        // Check if embed works, show fallback if not
+        setTimeout(() => {
+            const iframe = document.getElementById('youtube-iframe');
+            const fallback = document.getElementById('fallback-layer');
+            
+            // If iframe is too small or blocked, show fallback
+            if (iframe && fallback) {
+                const rect = iframe.getBoundingClientRect();
+                if (rect.height < 100) {
+                    iframe.style.display = 'none';
+                    fallback.style.display = 'flex';
+                }
+            }
+        }, 2000);
         
         // Load video details
         await this.loadVideoDetails(videoId);
