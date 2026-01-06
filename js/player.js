@@ -350,7 +350,9 @@ class VideoPlayer {
             
             setTimeout(() => {
                 notification.remove();
-            }, 2500
+            }, 2500);
+            
+            // Show info alert
             alert(`Video saved: ${title}\n\nNote: This saves video info for quick access. Actual video streaming still requires internet.`);
         } catch (error) {
             console.error('Download error:', error);

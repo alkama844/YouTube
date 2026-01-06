@@ -216,7 +216,7 @@ class FastTubeApp {
             this.displayVideos(results);
         } catch (error) {
             console.error('Trending videos error:', error);
-            this.showDemoVideos();
+            this.showError('Failed to load videos. Please check your API key in Settings.');
         } finally {
             this.isLoading = false;
         }
