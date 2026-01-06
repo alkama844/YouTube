@@ -44,6 +44,15 @@ class YouTubeAPI {
         }
     }
 
+    // Get video details
+    async getVideoDetails(videoId) {
+        const url = this.buildURL('videos', {
+            part: 'snippet,statistics,contentDetails',
+            id: videoId
+        });
+        return await this.fetchWithCache(url);
+    }
+
     // Search videos (removed embeddable restriction to get more results)
     async searchVideos(query, maxResults = CONFIG.DEFAULT_MAX_RESULTS, pageToken = null) {
         const url = this.buildURL('search', {

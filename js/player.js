@@ -8,71 +8,72 @@ class VideoPlayer {
         this.embedCheckTimeout = null;
     }
 
-    // Universal player that works for ALL videos
-    initPlayer(videoId, quality = 'default') {
+    // Fast YouTube player with full features
+    async initPlayer(videoId, quality = 'default') {
         this.currentVideoId = videoId;
         const playerContainer = document.getElementById('video-player');
         
         // Clear previous content
         playerContainer.innerHTML = '';
         
-        // Create wrapper
-        const wrapper = document.createElement('div');
-        wrapper.style.cssText = 'width: 100%; height: 100%; background: #000; position: relative;';
-        wrapper.id = 'player-wrapper';
+        // Create optimized iframe
+        const iframe = document.createElement('iframe');
+        iframe.id = 'youtube-iframe';
+        iframe.style.cssText = 'width: 100%; height: 100%; border: none; background: #000;';
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('allow', 'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture');
+        iframe.setAttribute('loading', 'eager');
         
-        const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
-        const mobileUrl = `https://m.youtube.com/watch?v=${videoId}`;
-        const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&rel=0&fs=1`;
+        // Optimized embed URL for speed
+        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
         
-        // SIMPLE SOLUTION: Big prominent buttons + embed below
-        wrapper.innerHTML = `
-            <div style="width: 100%; height: 100%; display: flex; flex-direction: column;">
-                <!-- ALWAYS VISIBLE WATCH OPTIONS (Top Priority) -->
-                <div style="background: linear-gradient(135deg, #1a1a2e, #141420); border-bottom: 2px solid var(--neon-blue); padding: 16px; display: flex; flex-direction: column; gap: 10px;">
-                    <div style="text-align: center; color: var(--text-primary); font-size: 14px; font-weight: 600; margin-bottom: 5px;">
-                        🎬 Watch This Video:
-                    </div>
-                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                        <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer"
-                           style="flex: 1; min-width: 140px; background: linear-gradient(135deg, #FF0000, #CC0000); color: white; padding: 14px 20px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 700; text-align: center; box-shadow: 0 4px 15px rgba(255,0,0,0.5); transition: all 0.2s; border: 2px solid #FF0000;"
-                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(255,0,0,0.7)'"
-                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(255,0,0,0.5)'">
-                            ▶️ YouTube.com
-                        </a>
-                        <a href="${mobileUrl}" target="_blank" rel="noopener noreferrer"
-                           style="flex: 1; min-width: 140px; background: var(--neon-blue); color: white; padding: 14px 20px; border-radius: 10px; text-decoration: none; font-size: 14px; font-weight: 700; text-align: center; box-shadow: 0 0 20px var(--primary-glow); transition: all 0.2s; border: 2px solid var(--neon-blue);"
-                           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 0 30px var(--primary-glow)'"
-                           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 20px var(--primary-glow)'">
-                            📱 Mobile
-                        </a>
-                    </div>
-                    <button onclick="navigator.clipboard.writeText('${youtubeUrl}').then(() => { this.innerHTML = '✅ Copied!'; setTimeout(() => this.innerHTML = '📋 Copy Link', 2000); }).catch(() => prompt('Copy this URL:', '${youtubeUrl}'))" 
-                       style="background: var(--surface-color); color: var(--neon-green); padding: 10px; border-radius: 8px; border: 1px solid var(--neon-green); font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
-                       onmouseover="this.style.background='var(--surface-hover)'"
-                       onmouseout="this.style.background='var(--surface-color)'">
-                        📋 Copy Link
-                    </button>
+        playerContainer.appendChild(iframe);
+        this.player = iframe;
+        
+        // Load video details
+        await this.loadVideoDetails(videoId);
+    }
+    
+    // Load video description and stats
+    async loadVideoDetails(videoId) {
+        try {
+            const data = await youtubeAPI.getVideoDetails(videoId);
+            if (data && data.items && data.items[0]) {
+                const video = data.items[0];
+                this.displayVideoInfo(video);
+            }
+        } catch (error) {
+            console.error('Failed to load video details:', error);
+        }
+    }
+    
+    // Display video description and info
+    displayVideoInfo(video) {
+        const snippet = video.snippet;
+        const statistics = video.statistics;
+        const descContainer = document.getElementById('video-description');
+        
+        if (!descContainer) return;
+        
+        const views = statistics?.viewCount ? parseInt(statistics.viewCount).toLocaleString() : 'N/A';
+        const likes = statistics?.likeCount ? parseInt(statistics.likeCount).toLocaleString() : 'N/A';
+        const publishedDate = new Date(snippet.publishedAt).toLocaleDateString();
+        
+        descContainer.innerHTML = `
+            <div style="padding: 16px; background: var(--surface-color); border-radius: 12px; margin-bottom: 16px;">
+                <div style="display: flex; gap: 12px; margin-bottom: 12px; color: var(--text-secondary); font-size: 13px;">
+                    <span>👁️ ${views} views</span>
+                    <span>👍 ${likes}</span>
+                    <span>📅 ${publishedDate}</span>
                 </div>
-                
-                <!-- Embed attempt (may or may not work) -->
-                <div style="flex: 1; position: relative; background: #000;">
-                    <iframe 
-                        style="width: 100%; height: 100%; border: none;" 
-                        src="${embedUrl}"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                        allowfullscreen
-                        referrerpolicy="no-referrer-when-downgrade">
-                    </iframe>
-                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: rgba(255,255,255,0.5); font-size: 12px; pointer-events: none;">
-                        ⬆️ If video doesn't load, use buttons above
-                    </div>
+                <div style="font-weight: 700; color: var(--neon-blue); margin-bottom: 8px; font-size: 14px;">
+                    ${snippet.channelTitle}
+                </div>
+                <div style="color: var(--text-secondary); font-size: 13px; line-height: 1.6; max-height: 200px; overflow-y: auto;">
+                    ${snippet.description ? snippet.description.split('\n').slice(0, 10).join('<br>') : 'No description'}
                 </div>
             </div>
         `;
-        
-        playerContainer.appendChild(wrapper);
-        this.player = wrapper;
     }
     
 
