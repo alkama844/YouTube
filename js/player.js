@@ -20,55 +20,31 @@ class VideoPlayer {
         const container = document.createElement('div');
         container.style.cssText = 'width: 100%; height: 100%; background: #000; position: relative;';
         
-        // Try multiple embed methods simultaneously for speed
+        // LIGHTWEIGHT approach - try embed, provide instant backup
         container.innerHTML = `
             <div style="width: 100%; height: 100%; position: relative;">
-                <!-- Primary YouTube Embed -->
+                <!-- Primary YouTube Embed (simple, fast) -->
                 <iframe 
                     id="youtube-iframe"
-                    style="width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0;" 
-                    src="https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1&playsinline=1"
-                    allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" 
-                    allowfullscreen
-                    loading="eager">
+                    style="width: 100%; height: 100%; border: none; position: absolute; top: 0; left: 0; z-index: 1;" 
+                    src="https://www.youtube.com/embed/${videoId}?autoplay=1&modestbranding=1"
+                    allow="autoplay; encrypted-media; picture-in-picture" 
+                    allowfullscreen>
                 </iframe>
                 
-                <!-- Fallback: Direct YouTube watch link -->
-                <div id="fallback-layer" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, var(--surface-color), var(--bg-color)); display: flex; align-items: center; justify-content: center; flex-direction: column; padding: 20px;">
-                    <div style="text-align: center; max-width: 400px;">
-                        <div style="font-size: 48px; margin-bottom: 20px;">🎬</div>
-                        <h3 style="color: var(--neon-blue); margin-bottom: 12px; font-size: 18px;">Video Ready</h3>
-                        <p style="color: var(--text-secondary); margin-bottom: 24px; font-size: 14px;">This video has playback restrictions. Tap below to watch:</p>
-                        <a href="https://www.youtube.com/watch?v=${videoId}" 
-                           target="_blank" 
-                           rel="noopener noreferrer"
-                           style="display: inline-block; background: linear-gradient(135deg, #FF0000, #CC0000); color: white; padding: 16px 40px; border-radius: 12px; text-decoration: none; font-size: 16px; font-weight: 700; box-shadow: 0 4px 20px rgba(255,0,0,0.5); transition: all 0.3s;"
-                           onmouseover="this.style.transform='scale(1.05)'"
-                           onmouseout="this.style.transform='scale(1)'">
-                            ▶️ Watch Now
-                        </a>
-                    </div>
+                <!-- Always visible "If stuck" button overlay -->
+                <div style="position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 100; text-align: center;">
+                    <a href="https://m.youtube.com/watch?v=${videoId}" 
+                       target="_blank"
+                       style="display: inline-block; background: rgba(255, 0, 0, 0.95); color: white; padding: 12px 30px; border-radius: 25px; text-decoration: none; font-size: 14px; font-weight: 700; box-shadow: 0 4px 15px rgba(0,0,0,0.5); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.3);">
+                        🚀 Video Stuck? Tap Here
+                    </a>
                 </div>
             </div>
         `;
         
         playerContainer.appendChild(container);
         this.player = container;
-        
-        // Check if embed works, show fallback if not
-        setTimeout(() => {
-            const iframe = document.getElementById('youtube-iframe');
-            const fallback = document.getElementById('fallback-layer');
-            
-            // If iframe is too small or blocked, show fallback
-            if (iframe && fallback) {
-                const rect = iframe.getBoundingClientRect();
-                if (rect.height < 100) {
-                    iframe.style.display = 'none';
-                    fallback.style.display = 'flex';
-                }
-            }
-        }, 2000);
         
         // Load video details
         await this.loadVideoDetails(videoId);
