@@ -194,10 +194,19 @@ class VideoPlayer {
     }
 
     // Show player section
-    showPlayer(videoId, title) {
+    async showPlayer(videoId, title) {
         document.getElementById('player-section').style.display = 'block';
         document.getElementById('video-title').textContent = title;
         this.initPlayer(videoId);
+        
+        // Scroll to top
+        document.getElementById('player-section').scrollTop = 0;
+        
+        // Load video details
+        this.loadVideoDetails(videoId);
+        
+        // Load related videos
+        this.loadRelatedVideos(videoId);
         
         // Add to watch history
         storage.addToHistory({
@@ -205,6 +214,111 @@ class VideoPlayer {
             title: title,
             timestamp: Date.now()
         });
+    }
+    
+    // Load video details from API
+    async loadVideoDetails(videoId) {
+        try {
+            const data = await youtubeAPI.getVideoDetails(videoId);
+            if (data.items && data.items.length > 0) {
+                const video = data.items[0];
+                const snippet = video.snippet;
+                const statistics = video.statistics;
+                
+                // Update title
+                document.getElementById('video-title').textContent = snippet.title;
+                
+                // Update stats
+                const views = statistics ? youtubeAPI.formatViewCount(statistics.viewCount) : '0';
+                document.getElementById('video-views').textContent = `${views} views`;
+                
+                // Update date
+                const publishedDate = new Date(snippet.publishedAt);
+                const timeAgo = this.getTimeAgo(publishedDate);
+                document.getElementById('video-date').textContent = timeAgo;
+                
+                // Update channel info
+                document.getElementById('channel-name').textContent = snippet.channelTitle;
+                
+                // Update description
+                const description = snippet.description || 'No description available.';
+                document.getElementById('video-description-text').textContent = description;
+            }
+        } catch (error) {
+            console.error('Error loading video details:', error);
+        }
+    }
+    
+    // Load related videos
+    async loadRelatedVideos(videoId) {
+        try {
+            const data = await youtubeAPI.getRelatedVideos(videoId, 10);
+            const container = document.getElementById('related-videos');
+            container.innerHTML = '';
+            
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(video => {
+                    const card = this.createRelatedVideoCard(video);
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = '<p style="color: var(--text-secondary); padding: 20px;">No related videos found</p>';
+            }
+        } catch (error) {
+            console.error('Error loading related videos:', error);
+            document.getElementById('related-videos').innerHTML = '<p style="color: var(--text-secondary); padding: 20px;">Could not load related videos</p>';
+        }
+    }
+    
+    // Create related video card
+    createRelatedVideoCard(video) {
+        const videoId = video.id.videoId || video.id;
+        const snippet = video.snippet;
+        
+        const card = document.createElement('div');
+        card.className = 'related-video-card';
+        
+        const thumbnail = snippet.thumbnails.medium.url;
+        const title = snippet.title;
+        const channelTitle = snippet.channelTitle;
+        
+        card.innerHTML = `
+            <div class="related-video-thumbnail">
+                <img src="${thumbnail}" alt="${title}" loading="lazy">
+            </div>
+            <div class="related-video-info">
+                <div class="related-video-title">${title}</div>
+                <div class="related-video-channel">${channelTitle}</div>
+            </div>
+        `;
+        
+        card.addEventListener('click', () => {
+            this.showPlayer(videoId, title);
+        });
+        
+        return card;
+    }
+    
+    // Get time ago string
+    getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        
+        let interval = Math.floor(seconds / 31536000);
+        if (interval >= 1) return interval === 1 ? '1 year ago' : `${interval} years ago`;
+        
+        interval = Math.floor(seconds / 2592000);
+        if (interval >= 1) return interval === 1 ? '1 month ago' : `${interval} months ago`;
+        
+        interval = Math.floor(seconds / 86400);
+        if (interval >= 1) return interval === 1 ? '1 day ago' : `${interval} days ago`;
+        
+        interval = Math.floor(seconds / 3600);
+        if (interval >= 1) return interval === 1 ? '1 hour ago' : `${interval} hours ago`;
+        
+        interval = Math.floor(seconds / 60);
+        if (interval >= 1) return interval === 1 ? '1 minute ago' : `${interval} minutes ago`;
+        
+        return 'Just now';
     }
 
     // Close player

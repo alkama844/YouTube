@@ -57,16 +57,46 @@
 
         <!-- Video Player Section -->
         <section id="player-section" class="player-section" style="display: none;">
-            <div class="player-container">
-                <button id="close-player" class="close-btn"><span class="icon icon-close"></span></button>
-                <div id="video-player"></div>
-                <div class="player-controls">
-                    <h3 id="video-title" class="video-title">Video Title</h3>
-                    <div class="control-buttons">
-                        <button id="picture-in-picture" class="control-btn"><span class="icon icon-pip"></span> PiP</button>
-                        <button id="background-play" class="control-btn"><span class="icon icon-headphones"></span> Background</button>
-                        <button id="download-btn" class="control-btn"><span class="icon icon-download"></span> Save</button>
+            <div class="player-layout">
+                <!-- Main Video Area -->
+                <div class="player-main">
+                    <button id="close-player" class="close-btn"><span class="icon icon-close"></span></button>
+                    <div id="video-player"></div>
+                    
+                    <!-- Video Details -->
+                    <div class="video-details">
+                        <h1 id="video-title" class="video-title">Video Title</h1>
+                        <div class="video-stats">
+                            <span id="video-views" class="video-views">0 views</span>
+                            <span class="separator">•</span>
+                            <span id="video-date" class="video-date">Just now</span>
+                        </div>
+                        
+                        <div class="video-actions">
+                            <div class="channel-info">
+                                <div class="channel-avatar"></div>
+                                <div class="channel-details">
+                                    <div id="channel-name" class="channel-name">Channel Name</div>
+                                    <div id="channel-subscribers" class="channel-subscribers">0 subscribers</div>
+                                </div>
+                            </div>
+                            <div class="action-buttons">
+                                <button id="picture-in-picture" class="action-btn"><span class="icon icon-pip"></span> PiP</button>
+                                <button id="background-play" class="action-btn"><span class="icon icon-headphones"></span> Background</button>
+                                <button id="download-btn" class="action-btn"><span class="icon icon-download"></span> Save</button>
+                            </div>
+                        </div>
+                        
+                        <div class="video-description">
+                            <div id="video-description-text" class="description-text">Loading description...</div>
+                        </div>
                     </div>
+                </div>
+                
+                <!-- Related Videos Sidebar -->
+                <div class="player-sidebar">
+                    <h3 class="sidebar-title">Related Videos</h3>
+                    <div id="related-videos" class="related-videos-list"></div>
                 </div>
             </div>
         </section>
