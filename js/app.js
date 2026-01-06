@@ -14,7 +14,9 @@ class FastTubeApp {
         
         // Check API key
         if (CONFIG.API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE') {
-            this.showAPIKeyPrompt();
+            this.showAPIKeyRequired();
+            this.hideLoadingScreen();
+            return;
         }
         
         // Setup event listeners
@@ -100,11 +102,66 @@ class FastTubeApp {
         document.getElementById('app').style.display = 'block';
     }
 
-    // Show API key prompt
+    // Show API key required message
+    showAPIKeyRequired() {
+        const container = document.getElementById('video-results');
+        container.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 60vh; padding: 40px 20px; text-align: center;">
+                <div style="width: 100px; height: 100px; margin-bottom: 30px; position: relative;">
+                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--neon-blue); border-radius: 50%; opacity: 0.3;"></div>
+                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--neon-blue); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; border-top-color: transparent;"></div>
+                    <svg style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="var(--neon-blue)" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 6v6l4 2"/>
+                    </svg>
+                </div>
+                
+                <h2 style="color: var(--neon-blue); font-size: 24px; margin-bottom: 16px; text-shadow: 0 0 20px var(--primary-glow);">
+                    API Key Required
+                </h2>
+                
+                <p style="color: var(--text-secondary); font-size: 16px; max-width: 500px; margin-bottom: 30px; line-height: 1.6;">
+                    To use FastTube, you need to add your YouTube Data API v3 key.
+                </p>
+                
+                <div style="background: var(--surface-color); border: 1px solid var(--border-color); border-radius: 16px; padding: 24px; max-width: 600px; margin-bottom: 30px; text-align: left;">
+                    <h3 style="color: var(--text-primary); font-size: 16px; margin-bottom: 16px; font-weight: 600;">Quick Setup:</h3>
+                    <ol style="color: var(--text-secondary); font-size: 14px; line-height: 2; padding-left: 20px;">
+                        <li>Visit <a href="https://console.developers.google.com/" target="_blank" style="color: var(--neon-blue); text-decoration: none;">Google Cloud Console</a></li>
+                        <li>Create a new project</li>
+                        <li>Enable <strong style="color: var(--text-primary);">YouTube Data API v3</strong></li>
+                        <li>Create Credentials → API Key</li>
+                        <li>Copy your API key</li>
+                        <li>Click Settings below and paste it</li>
+                    </ol>
+                </div>
+                
+                <button onclick="document.querySelector('[data-page=settings]').click()" 
+                        style="background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink)); 
+                               color: white; padding: 16px 40px; border: none; border-radius: 12px; 
+                               font-size: 16px; font-weight: 600; cursor: pointer;
+                               box-shadow: 0 0 30px var(--primary-glow); transition: all 0.3s ease;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 0 40px var(--primary-glow)'"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 30px var(--primary-glow)'">
+                    <span class="icon icon-settings" style="display: inline-block; margin-right: 8px;"></span>
+                    Open Settings
+                </button>
+                
+                <style>
+                    @keyframes ping {
+                        75%, 100% {
+                            transform: scale(1.5);
+                            opacity: 0;
+                        }
+                    }
+                </style>
+            </div>
+        `;
+    }
+
+    // Show API key prompt (legacy)
     showAPIKeyPrompt() {
-        setTimeout(() => {
-            alert('⚠️ API Key Required\n\nTo use FastTube, you need a YouTube Data API v3 key.\n\n1. Go to: console.developers.google.com\n2. Create a project\n3. Enable YouTube Data API v3\n4. Create credentials (API Key)\n5. Enter it in Settings\n\nFor demo purposes, the app will show limited functionality.');
-        }, 1000);
+        // Removed - Replaced with showAPIKeyRequired which shows error: 'Failed to load videos. Please check your API key in Settings.'
     }
 
     // Handle search
@@ -159,7 +216,7 @@ class FastTubeApp {
             this.displayVideos(results);
         } catch (error) {
             console.error('Trending videos error:', error);
-            this.showDemoVideos();
+            this.showError('Failed to load videos. Please check your API key in Settings.');
         } finally {
             this.isLoading = false;
         }
@@ -372,41 +429,24 @@ class FastTubeApp {
     showError(message) {
         const container = document.getElementById('video-results');
         container.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-                <p style="color: var(--danger-color); font-size: 16px; margin-bottom: 12px;">⚠️ ${message}</p>
-                <button onclick="location.reload()" style="background: var(--primary-color); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Retry</button>
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="width: 80px; height: 80px; margin: 0 auto 24px; position: relative;">
+                    <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--danger-color)" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <p style="color: var(--danger-color); font-size: 18px; margin-bottom: 16px; font-weight: 600;">${message}</p>
+                <button onclick="document.querySelector('[data-page=settings]').click()" 
+                        style="background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink)); 
+                               color: white; border: none; padding: 12px 28px; border-radius: 12px; 
+                               cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 12px;
+                               box-shadow: 0 0 20px var(--primary-glow);">
+                    Go to Settings
+                </button>
             </div>
         `;
-    }
-
-    // Show demo videos (fallback when API is not configured)
-    showDemoVideos() {
-        const demoVideos = [
-            { id: 'dQw4w9WgXcQ', title: 'Demo Video 1', channel: 'Demo Channel' },
-            { id: 'jNQXAC9IVRw', title: 'Demo Video 2', channel: 'Demo Channel' },
-            { id: '9bZkp7q19f0', title: 'Demo Video 3', channel: 'Demo Channel' }
-        ];
-        
-        const container = document.getElementById('video-results');
-        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">⚠️ API key not configured. Showing demo videos.<br>Go to Settings to add your YouTube API key.</p>';
-        
-        demoVideos.forEach(video => {
-            const card = document.createElement('div');
-            card.className = 'video-card';
-            card.innerHTML = `
-                <div class="video-thumbnail">
-                    <img src="https://img.youtube.com/vi/${video.id}/mqdefault.jpg" alt="${video.title}" loading="lazy">
-                </div>
-                <div class="video-info">
-                    <div class="video-title-card">${video.title}</div>
-                    <div class="video-meta">${video.channel}</div>
-                </div>
-            `;
-            card.addEventListener('click', () => {
-                this.playVideo(video.id, video.title);
-            });
-            container.appendChild(card);
-        });
     }
 }
 
