@@ -44,6 +44,26 @@ class VideoPlayer {
         
         iframe.src = embedUrl.toString();
         
+        // Listen for YouTube player errors
+        window.addEventListener('message', (event) => {
+            if (event.origin.includes('youtube.com') || event.origin.includes('youtube-nocookie.com')) {
+                try {
+                    const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+                    // Check for error events (Error 150, 153, etc.)
+                    if (data.event === 'infoDelivery' && data.info && data.info.playerState === -1) {
+                        // Player error state
+                        setTimeout(() => this.detectEmbedError(videoId, wrapper), 1000);
+                    }
+                    if (data.event === 'onError' || (data.info && data.info.errorCode)) {
+                        console.log('YouTube player error detected:', data);
+                        this.showFallbackPlayer(videoId, wrapper);
+                    }
+                } catch (e) {
+                    // Ignore parse errors
+                }
+            }
+        });
+        
         // Add load event listener
         iframe.addEventListener('load', () => {
             this.checkEmbedRestrictions(videoId, wrapper);
@@ -64,6 +84,19 @@ class VideoPlayer {
         }, 3000);
         
         return iframe;
+    }
+    
+    // Detect embed errors (Error 153, 150, etc.)
+    detectEmbedError(videoId, wrapper) {
+        const iframe = document.getElementById('youtube-iframe');
+        if (!iframe) return;
+        
+        // Check if iframe has very small height (sign of error)
+        const rect = iframe.getBoundingClientRect();
+        if (rect.height < 100 && rect.width > 0) {
+            console.log('Embed restriction detected (small iframe height)');
+            this.showFallbackPlayer(videoId, wrapper);
+        }
     }
     
     // Check if embed loaded successfully
@@ -104,16 +137,21 @@ class VideoPlayer {
         wrapper.innerHTML = `
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 30px; text-align: center; color: var(--text-primary); background: linear-gradient(135deg, var(--surface-color) 0%, var(--bg-color) 100%);">
                 <div style="width: 80px; height: 80px; margin-bottom: 25px; position: relative;">
-                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--neon-blue); border-radius: 50%; opacity: 0.3;"></div>
-                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--neon-blue); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; border-top-color: transparent;"></div>
-                    <svg style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-blue)" stroke-width="2">
-                        <polygon points="5 3 19 12 5 21 5 3" fill="var(--neon-blue)" opacity="0.6"/>
+                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--danger-color); border-radius: 50%; opacity: 0.3;"></div>
+                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--danger-color); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; border-top-color: transparent;"></div>
+                    <svg style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--danger-color)" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="15" y1="9" x2="9" y2="15"/>
+                        <line x1="9" y1="9" x2="15" y2="15"/>
                     </svg>
                 </div>
                 
-                <h3 style="margin-bottom: 12px; font-size: 18px; color: var(--text-primary); font-weight: 600;">Playback Restricted</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 14px; max-width: 400px; line-height: 1.6;">
-                    This video has embedding restrictions. Choose an alternative playback method:
+                <h3 style="margin-bottom: 12px; font-size: 18px; color: var(--danger-color); font-weight: 600;">Error 153: Playback Restricted</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 10px; font-size: 14px; max-width: 450px; line-height: 1.6;">
+                    This video cannot be embedded due to creator restrictions or copyright policies.
+                </p>
+                <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 13px; max-width: 450px; line-height: 1.5; opacity: 0.8;">
+                    Use one of these options to watch the video:
                 </p>
                 
                 <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px;">
