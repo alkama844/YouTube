@@ -13,23 +13,21 @@ class VideoPlayer {
         this.currentVideoId = videoId;
         const playerContainer = document.getElementById('video-player');
         
-        // Clear previous content
-        playerContainer.innerHTML = '';
+        // Clean HTML structure for iframe
+        playerContainer.innerHTML = `
+            <iframe 
+                id="yt-player"
+                width="100%" 
+                height="100%" 
+                src="https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1" 
+                frameborder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
+                allowfullscreen
+                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; background: #000;">
+            </iframe>
+        `;
         
-        // FASTEST configuration - no delays, no checks
-        const iframe = document.createElement('iframe');
-        iframe.id = 'yt-player';
-        iframe.style.cssText = 'width: 100%; height: 100%; border: none; background: #000;';
-        iframe.setAttribute('allowfullscreen', '');
-        iframe.setAttribute('allow', 'autoplay; encrypted-media; picture-in-picture');
-        iframe.setAttribute('loading', 'eager'); // Prioritize loading
-        iframe.setAttribute('importance', 'high'); // High priority
-        
-        // Optimized URL - autoplay, minimal params for SPEED
-        iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0`;
-        
-        playerContainer.appendChild(iframe);
-        this.player = iframe;
+        this.player = document.getElementById('yt-player');
         
         // Load video details (async, doesn't block player)
         this.loadVideoDetails(videoId);
