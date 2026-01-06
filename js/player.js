@@ -8,56 +8,18 @@ class VideoPlayer {
         this.embedCheckTimeout = null;
     }
 
-    // ULTRA FAST player - optimized like real YouTube
+    // Open official YouTube player - FASTEST, works 100%
     async initPlayer(videoId, quality = 'default') {
         this.currentVideoId = videoId;
-        const playerContainer = document.getElementById('video-player');
         
-        // Super lightweight HTML - minimal for speed
-        playerContainer.innerHTML = `
-            <div style="position: relative; width: 100%; height: 100%; background: #000;">
-                <iframe 
-                    id="yt-player"
-                    src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
-                    frameborder="0" 
-                    allow="autoplay; encrypted-media; picture-in-picture" 
-                    allowfullscreen
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;">
-                </iframe>
-                
-                <!-- Quick help button if video doesn't load -->
-                <div id="help-btn-${videoId}" style="display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; z-index: 10;">
-                    <div style="background: rgba(0,0,0,0.9); padding: 30px; border-radius: 16px; border: 2px solid var(--neon-orange);">
-                        <div style="font-size: 50px; margin-bottom: 15px;">⚠️</div>
-                        <h3 style="color: var(--neon-orange); margin-bottom: 10px; font-size: 16px;">Video Blocked</h3>
-                        <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">Owner disabled embedding</p>
-                        <button onclick="document.getElementById('close-player').click()" 
-                                style="background: var(--neon-blue); color: white; padding: 12px 30px; border: none; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;">
-                            ← Try Another Video
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
+        // Open YouTube's official player directly (mobile-optimized)
+        const youtubeUrl = `https://m.youtube.com/watch?v=${videoId}`;
+        window.open(youtubeUrl, '_blank');
         
-        this.player = document.getElementById('yt-player');
-        
-        // Quick check for blocked videos (lightweight)
+        // Close our player section since video opens in YouTube
         setTimeout(() => {
-            const iframe = document.getElementById('yt-player');
-            const helpBtn = document.getElementById(`help-btn-${videoId}`);
-            if (iframe && helpBtn) {
-                const rect = iframe.getBoundingClientRect();
-                // If iframe collapsed, show help
-                if (rect.height < 50) {
-                    iframe.style.display = 'none';
-                    helpBtn.style.display = 'block';
-                }
-            }
-        }, 3000);
-        
-        // Load video details (async, doesn't block player)
-        this.loadVideoDetails(videoId);
+            this.closePlayer();
+        }, 500);
     }
     
     // Load video description and stats
