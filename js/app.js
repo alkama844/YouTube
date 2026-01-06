@@ -63,8 +63,44 @@ class FastTubeApp {
             videoPlayer.startBackgroundPlay();
         });
         
-        document.getElementById('download-btn').addEventListener('click', () => {
-            videoPlayer.downloadVideo();
+        document.getElementById('add-to-playlist-btn').addEventListener('click', () => {
+            if (videoPlayer.currentVideoId) {
+                videoPlayer.addToPlaylist(
+                    videoPlayer.currentVideoId,
+                    videoPlayer.currentVideoTitle,
+                    videoPlayer.currentVideoThumbnail
+                );
+            }
+        });
+        
+        // Playlist controls
+        document.getElementById('play-all-btn').addEventListener('click', () => {
+            videoPlayer.playAllPlaylist();
+        });
+        
+        document.getElementById('clear-playlist-btn').addEventListener('click', () => {
+            videoPlayer.clearPlaylist();
+        });
+        
+        // Mini player controls
+        document.getElementById('mini-player-thumbnail').addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        
+        document.getElementById('mini-player-info').addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        
+        document.getElementById('mini-player-prev').addEventListener('click', () => {
+            videoPlayer.playPrevious();
+        });
+        
+        document.getElementById('mini-player-next').addEventListener('click', () => {
+            videoPlayer.playNext();
+        });
+        
+        document.getElementById('mini-player-close').addEventListener('click', () => {
+            videoPlayer.hideMiniPlayer();
         });
         
         // Settings
@@ -275,15 +311,15 @@ class FastTubeApp {
         `;
         
         card.addEventListener('click', () => {
-            this.playVideo(videoId, title);
+            this.playVideo(videoId, title, thumbnail);
         });
         
         return card;
     }
 
     // Play video
-    playVideo(videoId, title) {
-        videoPlayer.showPlayer(videoId, title);
+    playVideo(videoId, title, thumbnail) {
+        videoPlayer.showPlayer(videoId, title, thumbnail);
     }
 
     // Load more videos
@@ -339,32 +375,39 @@ class FastTubeApp {
         }
     }
 
-    // Show saved videos
+    // Show saved videos (now shows playlist)
     showSavedVideos() {
         document.querySelector('.results-section').style.display = 'none';
+        document.getElementById('player-section').style.display = 'none';
         const savedSection = document.getElementById('saved-section');
         savedSection.style.display = 'block';
         
-        const savedVideos = storage.getSavedVideos();
+        const playlist = storage.getPlaylist();
         const container = document.getElementById('saved-videos');
         container.innerHTML = '';
         
-        if (savedVideos.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No saved videos</p>';
+        // Update title
+        savedSection.querySelector('h2').innerHTML = '<span class="icon icon-save"></span> My Playlist';
+        
+        if (playlist.length === 0) {
+            container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 40px;">No videos in playlist<br><small>Add videos while watching to create a playlist</small></p>';
             return;
         }
         
-        savedVideos.forEach(video => {
+        playlist.forEach(video => {
             const card = document.createElement('div');
             card.className = 'video-card';
             card.innerHTML = `
-                <div class="video-info" style="padding: 16px;">
+                <div class="video-thumbnail">
+                    <img src="${video.thumbnail || ''}" alt="${video.title}" loading="lazy">
+                </div>
+                <div class="video-info">
                     <div class="video-title-card">${video.title}</div>
-                    <div class="video-meta">Saved ${new Date(video.savedAt).toLocaleDateString()}</div>
+                    <div class="video-meta">Added ${new Date(video.addedAt).toLocaleDateString()}</div>
                 </div>
             `;
             card.addEventListener('click', () => {
-                this.playVideo(video.id, video.title);
+                this.playVideo(video.id, video.title, video.thumbnail);
             });
             container.appendChild(card);
         });

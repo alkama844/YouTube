@@ -5,8 +5,61 @@ class StorageManager {
             SAVED_VIDEOS: 'fasttube_saved_videos',
             WATCH_HISTORY: 'fasttube_watch_history',
             SETTINGS: 'fasttube_settings',
-            CACHE: 'fasttube_cache'
+            CACHE: 'fasttube_cache',
+            PLAYLIST: 'fasttube_playlist'
         };
+    }
+
+    // Playlist methods
+    getPlaylist() {
+        try {
+            const data = localStorage.getItem(this.STORAGE_KEYS.PLAYLIST);
+            return data ? JSON.parse(data) : [];
+        } catch (error) {
+            console.error('Get playlist error:', error);
+            return [];
+        }
+    }
+
+    addToPlaylist(videoData) {
+        try {
+            const playlist = this.getPlaylist();
+            
+            // Check if already in playlist
+            const exists = playlist.find(v => v.id === videoData.id);
+            if (exists) {
+                return false;
+            }
+            
+            playlist.push(videoData);
+            localStorage.setItem(this.STORAGE_KEYS.PLAYLIST, JSON.stringify(playlist));
+            return true;
+        } catch (error) {
+            console.error('Add to playlist error:', error);
+            return false;
+        }
+    }
+
+    removeFromPlaylist(videoId) {
+        try {
+            let playlist = this.getPlaylist();
+            playlist = playlist.filter(v => v.id !== videoId);
+            localStorage.setItem(this.STORAGE_KEYS.PLAYLIST, JSON.stringify(playlist));
+            return true;
+        } catch (error) {
+            console.error('Remove from playlist error:', error);
+            return false;
+        }
+    }
+
+    clearPlaylist() {
+        try {
+            localStorage.setItem(this.STORAGE_KEYS.PLAYLIST, JSON.stringify([]));
+            return true;
+        } catch (error) {
+            console.error('Clear playlist error:', error);
+            return false;
+        }
     }
 
     // Save video for offline

@@ -83,12 +83,24 @@
                             <div class="action-buttons">
                                 <button id="picture-in-picture" class="action-btn"><span class="icon icon-pip"></span> PiP</button>
                                 <button id="background-play" class="action-btn"><span class="icon icon-headphones"></span> Background</button>
-                                <button id="download-btn" class="action-btn"><span class="icon icon-download"></span> Save</button>
+                                <button id="add-to-playlist-btn" class="action-btn"><span class="icon icon-save"></span> Add to Playlist</button>
                             </div>
                         </div>
                         
                         <div class="video-description">
                             <div id="video-description-text" class="description-text">Loading description...</div>
+                        </div>
+                        
+                        <!-- Playlist Section -->
+                        <div id="current-playlist" class="playlist-container" style="display: none;">
+                            <div class="playlist-header">
+                                <h3 class="playlist-title"><span class="icon icon-save"></span> Playlist (<span id="playlist-count">0</span>)</h3>
+                                <div class="playlist-controls">
+                                    <button id="play-all-btn" class="playlist-btn"><span class="icon icon-play"></span> Play All</button>
+                                    <button id="clear-playlist-btn" class="playlist-btn">Clear</button>
+                                </div>
+                            </div>
+                            <div id="playlist-items" class="playlist-items"></div>
                         </div>
                     </div>
                 </div>
@@ -123,13 +135,38 @@
             </button>
             <button class="nav-btn" data-page="saved">
                 <span class="icon icon-save"></span>
-                <span class="nav-label">Saved</span>
+                <span class="nav-label">Playlist</span>
             </button>
             <button class="nav-btn" data-page="settings">
                 <span class="icon icon-settings"></span>
                 <span class="nav-label">Settings</span>
             </button>
         </nav>
+
+        <!-- Mini Player -->
+        <div id="mini-player" class="mini-player">
+            <div id="mini-player-thumbnail" class="mini-player-thumbnail">
+                <img src="" alt="" id="mini-player-img">
+            </div>
+            <div id="mini-player-info" class="mini-player-info">
+                <div id="mini-player-title" class="mini-player-title">Video Title</div>
+                <div id="mini-player-channel" class="mini-player-channel">Channel Name</div>
+            </div>
+            <div class="mini-player-controls">
+                <button id="mini-player-prev" class="mini-player-btn" title="Previous">
+                    <span class="icon icon-prev"></span>
+                </button>
+                <button id="mini-player-play-pause" class="mini-player-btn" title="Play/Pause">
+                    <span class="icon icon-play"></span>
+                </button>
+                <button id="mini-player-next" class="mini-player-btn" title="Next">
+                    <span class="icon icon-next"></span>
+                </button>
+                <button id="mini-player-close" class="mini-player-btn" title="Close">
+                    <span class="icon icon-close"></span>
+                </button>
+            </div>
+        </div>
 
         <!-- Settings Modal -->
         <div id="settings-modal" class="modal" style="display: none;">
