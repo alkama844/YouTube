@@ -39,20 +39,19 @@
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.95));
             padding: 15px;
             display: flex;
             gap: 10px;
             justify-content: center;
             align-items: center;
             z-index: 1000;
-            transition: opacity 0.3s, transform 0.3s;
+            transition: all 0.3s;
         }
 
-        #controls.hidden {
-            opacity: 0;
-            transform: translateY(100%);
-            pointer-events: none;
+        #controls.minimized {
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.7);
         }
 
         .control-btn {
@@ -82,6 +81,18 @@
             background: #00f0ff;
             color: #000;
             box-shadow: 0 0 40px rgba(0, 240, 255, 0.8);
+        }
+
+        .control-btn.bg-active {
+            background: #00ff88;
+            color: #000;
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.8);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 40px rgba(0, 255, 136, 0.8); }
+            50% { box-shadow: 0 0 60px rgba(0, 255, 136, 1); }
         }
 
         #error-screen {
@@ -180,16 +191,9 @@
             }
         }
 
-        /* Hide controls on tap/click outside */
+        /* Keep controls visible but minimized during playback */
         #player-container.playing #controls {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        #player-container.playing:hover #controls,
-        #player-container.playing:active #controls {
-            opacity: 1;
-            pointer-events: auto;
+            /* Controls stay visible */
         }
     </style>
 </head>
@@ -232,8 +236,9 @@
         const loading = document.getElementById('loading');
 
         let isBlocked = false;
-        let controlsTimer = null;
         let isFullscreen = false;
+        let backgroundPlayEnabled = false;
+        let wakeLock = null;
 
         // Check if video ID exists
         if (!videoId) {
@@ -253,6 +258,9 @@
                 setTimeout(() => {
                     loading.style.display = 'none';
                     playerContainer.classList.add('playing');
+                    
+                    // Auto-enable background play
+                    enableBackgroundPlay();
                     
                     // Auto-fullscreen on mobile for immersive experience
                     if (window.innerWidth <= 768 && !isFullscreen) {
@@ -302,15 +310,69 @@
             errorScreen.classList.add('show');
         }
 
-        // Background Play Instructions
-        backgroundBtn.addEventListener('click', () => {
-            const instructions = `📱 To enable background play:\n\n` +
-                `1. Tap fullscreen (⛶) button\n` +
-                `2. Press Home button to minimize\n` +
-                `3. Audio continues in background!\n\n` +
-                `OR use YouTube's PiP button in video controls for true background play.`;
+        // Background Play Toggle
+        async function enableBackgroundPlay() {
+            if (backgroundPlayEnabled) return;
             
-            alert(instructions);
+            try {
+                // Request wake lock to keep page active
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Wake lock acquired');
+                }
+                
+                backgroundPlayEnabled = true;
+                backgroundBtn.classList.add('bg-active');
+                backgroundBtn.textContent = '✓ Background ON';
+                
+                // Keep audio playing when page is hidden
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+                
+            } catch (error) {
+                console.log('Wake lock not supported:', error);
+                // Fallback: still enable visibility handling
+                backgroundPlayEnabled = true;
+                backgroundBtn.classList.add('bg-active');
+                backgroundBtn.textContent = '✓ Background ON';
+                document.addEventListener('visibilitychange', handleVisibilityChange);
+            }
+        }
+
+        function handleVisibilityChange() {
+            if (document.hidden) {
+                console.log('App in background - audio should continue');
+                // Video continues playing in background
+            } else {
+                console.log('App in foreground');
+                // Reacquire wake lock if needed
+                if (wakeLock === null && 'wakeLock' in navigator) {
+                    navigator.wakeLock.request('screen').then(lock => {
+                        wakeLock = lock;
+                    }).catch(err => console.log('Wake lock error:', err));
+                }
+            }
+        }
+
+        async function disableBackgroundPlay() {
+            if (!backgroundPlayEnabled) return;
+            
+            if (wakeLock) {
+                await wakeLock.release();
+                wakeLock = null;
+            }
+            
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            backgroundPlayEnabled = false;
+            backgroundBtn.classList.remove('bg-active');
+            backgroundBtn.textContent = '🎵 Background';
+        }
+
+        backgroundBtn.addEventListener('click', async () => {
+            if (backgroundPlayEnabled) {
+                await disableBackgroundPlay();
+            } else {
+                await enableBackgroundPlay();
+            }
         });
 
         // Fullscreen
@@ -368,27 +430,8 @@
             window.location.href = `https://m.youtube.com/watch?v=${videoId}`;
         }
 
-        // Auto-hide controls
-        function resetControlsTimer() {
-            clearTimeout(controlsTimer);
-            controls.classList.remove('hidden');
-            
-            controlsTimer = setTimeout(() => {
-                if (playerContainer.classList.contains('playing')) {
-                    controls.classList.add('hidden');
-                }
-            }, 3000);
-        }
-
-        // Show controls on interaction
-        playerContainer.addEventListener('click', resetControlsTimer);
-        playerContainer.addEventListener('touchstart', resetControlsTimer);
-        playerContainer.addEventListener('mousemove', resetControlsTimer);
-
-        // Initial controls timer
-        setTimeout(() => {
-            resetControlsTimer();
-        }, 2000);
+        // Keep controls visible - no auto-hide
+        // Users need constant access to background play toggle
 
         // Handle back button
         window.addEventListener('popstate', () => {
@@ -407,19 +450,7 @@
             youtubePlayer.style.transform = 'translateZ(0)';
         });
 
-        // Background play support using Page Visibility API
-        let wasPlaying = false;
-
-        document.addEventListener('visibilitychange', () => {
-            if (document.hidden) {
-                // Page hidden (background) - video should keep playing if YouTube allows
-                wasPlaying = true;
-                console.log('App in background - video continues if YouTube allows');
-            } else {
-                // Page visible again
-                console.log('App back in foreground');
-            }
-        });
+        // Background play is now handled by enableBackgroundPlay() function above
 
         // Prevent accidental navigation
         window.addEventListener('beforeunload', (e) => {
@@ -444,7 +475,7 @@
                     if (document.fullscreenElement) {
                         exitFullscreen();
                     } else {
-                        closeBtn.click();
+                        backBtn.click();
                     }
                     break;
             }
