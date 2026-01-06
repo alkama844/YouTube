@@ -155,5 +155,4 @@ class YouTubeAPI {
     }
 }
 
-// Export instance
-const youtubeAPI = new YouTubeAPI();
+// Note: YouTubeAPI instance is created in app.js during initialization

@@ -165,5 +165,4 @@ class StorageManager {
     }
 }
 
-// Export instance
-const storage = new StorageManager();
+// Note: StorageManager instance is created in app.js during initialization

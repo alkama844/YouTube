@@ -74,7 +74,7 @@ class FastTubeApp {
         // Navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                console.log('Navigation clicked:', e.target.dataset.page);
+                console.log('Navigation clicked:', e.currentTarget.dataset.page);
                 this.handleNavigation(e);
             });
         });
@@ -557,11 +557,11 @@ function initializeCore() {
         }
         
         // Initialize Storage
-        if (typeof Storage !== 'undefined') {
-            storage = new Storage();
+        if (typeof StorageManager !== 'undefined') {
+            storage = new StorageManager();
             console.log('Storage initialized');
         } else {
-            console.warn('Storage class not found, using fallback');
+            console.warn('StorageManager class not found, using fallback');
             // Fallback storage
             storage = {
                 getSavedVideos: () => [],

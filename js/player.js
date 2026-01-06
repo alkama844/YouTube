@@ -8,11 +8,11 @@ class VideoPlayer {
         this.embedCheckTimeout = null;
     }
 
-    // Open embedded player page with background play support
+    // Open embedded player page with official YouTube embed
     async initPlayer(videoId, quality = 'default') {
         this.currentVideoId = videoId;
         
-        // Open dedicated player page in current tab (more professional on mobile)
+        // Open dedicated player page in current tab
         const playerUrl = `player.html?v=${videoId}`;
         window.location.href = playerUrl;
     }
@@ -62,16 +62,17 @@ class VideoPlayer {
 
     // Show player section
     showPlayer(videoId, title) {
-        document.getElementById('player-section').style.display = 'block';
-        document.getElementById('video-title').textContent = title;
+        // Redirect to player page with video
         this.initPlayer(videoId);
         
-        // Add to watch history
-        storage.addToHistory({
-            id: videoId,
-            title: title,
-            timestamp: Date.now()
-        });
+        // Add to watch history (will persist across page load)
+        if (storage) {
+            storage.addToHistory({
+                id: videoId,
+                title: title,
+                timestamp: Date.now()
+            });
+        }
     }
 
     // Close player
@@ -164,5 +165,4 @@ class VideoPlayer {
     }
 }
 
-// Export instance
-const videoPlayer = new VideoPlayer();
+// Note: VideoPlayer instance is created in app.js during initialization

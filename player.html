@@ -391,8 +391,9 @@
             // Apply saved theme
             applyTheme(currentTheme);
             
-            // Load video with optimal parameters for embedding
-            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&origin=${window.location.origin}&playsinline=1&modestbranding=1&rel=0`;
+            // Load video with optimal parameters for embedding (official YouTube embed)
+            // Using nocookie domain to avoid tracking and improve embedding compatibility
+            const embedUrl = `https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&enablejsapi=1&origin=${encodeURIComponent(window.location.origin)}&playsinline=1&modestbranding=1&rel=0&fs=1&iv_load_policy=3`;
             
             youtubePlayer.src = embedUrl;
 
