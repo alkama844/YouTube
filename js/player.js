@@ -240,6 +240,12 @@ class VideoPlayer {
                 // Update channel info
                 document.getElementById('channel-name').textContent = snippet.channelTitle;
                 
+                // Update subscriber count (if available from channel details)
+                // Note: Subscriber count requires separate API call to channels endpoint
+                // For now, hide the subscriber count to avoid showing incorrect data
+                const subscriberElement = document.getElementById('channel-subscribers');
+                subscriberElement.style.display = 'none';
+                
                 // Update description
                 const description = snippet.description || 'No description available.';
                 document.getElementById('video-description-text').textContent = description;
@@ -272,19 +278,28 @@ class VideoPlayer {
     
     // Create related video card
     createRelatedVideoCard(video) {
-        const videoId = video.id.videoId || video.id;
-        const snippet = video.snippet;
+        // Safe ID extraction
+        const videoId = (video.id && (video.id.videoId || video.id)) || null;
+        if (!videoId) {
+            console.warn('Video card missing valid ID:', video);
+            return document.createElement('div'); // Return empty div
+        }
+        
+        const snippet = video.snippet || {};
         
         const card = document.createElement('div');
         card.className = 'related-video-card';
         
-        const thumbnail = snippet.thumbnails.medium.url;
-        const title = snippet.title;
-        const channelTitle = snippet.channelTitle;
+        // Safe thumbnail extraction with fallback
+        const thumbnail = snippet.thumbnails?.medium?.url || 
+                         snippet.thumbnails?.default?.url || 
+                         'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="168" height="94"%3E%3Crect fill="%23141420" width="168" height="94"/%3E%3C/svg%3E';
+        const title = snippet.title || 'Untitled Video';
+        const channelTitle = snippet.channelTitle || 'Unknown Channel';
         
         card.innerHTML = `
             <div class="related-video-thumbnail">
-                <img src="${thumbnail}" alt="${title}" loading="lazy">
+                <img src="${thumbnail}" alt="${title}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'168\\' height=\\'94\\'%3E%3Crect fill=\\'%23141420\\' width=\\'168\\' height=\\'94\\'/%3E%3C/svg%3E'">
             </div>
             <div class="related-video-info">
                 <div class="related-video-title">${title}</div>
