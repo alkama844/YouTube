@@ -413,6 +413,7 @@ body::before {
 .player-main {
     flex: 1;
     min-width: 0;
+    max-width: 1280px; /* Constrain player width like YouTube */
     position: relative;
 }
 
@@ -425,6 +426,10 @@ body::before {
 @media (max-width: 1024px) {
     .player-layout {
         flex-direction: column;
+    }
+    
+    .player-main {
+        max-width: 100%;
     }
     
     .player-sidebar {
