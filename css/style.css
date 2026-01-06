@@ -280,9 +280,11 @@ body::before {
 }
 
 .filter-btn.active {
-    background: var(--primary-color);
+    background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
     color: white;
     border-color: var(--primary-color);
+    box-shadow: 0 0 15px var(--primary-glow);
+    font-weight: 600;
 }
 
 .filter-btn:active {

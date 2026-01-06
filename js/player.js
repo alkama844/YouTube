@@ -234,7 +234,7 @@ class VideoPlayer {
         }
     }
 
-    // Background play mode (audio only)
+    // Start background play mode (audio only)
     startBackgroundPlay() {
         if (!CONFIG.ENABLE_BACKGROUND_PLAY) {
             alert('Background play is disabled in settings.');
@@ -246,18 +246,50 @@ class VideoPlayer {
             return;
         }
 
-        // Create audio element for background playback
-        // Note: This is a workaround since YouTube doesn't officially support audio-only embed
         const videoId = this.currentVideoId;
         const title = document.getElementById('video-title').textContent;
         
         this.isBackgroundMode = true;
-        alert(`Background mode enabled for: ${title}\n\nYou can now minimize the app. Audio will continue playing.`);
+        
+        // Show notification
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink));
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 10000;
+            box-shadow: 0 0 30px var(--primary-glow);
+            animation: slideDown 0.3s ease;
+            max-width: 90%;
+            text-align: center;
+        `;
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="icon icon-headphones" style="font-size: 20px;"></span>
+                <div>
+                    <div style="font-weight: 700;">Background Mode Active</div>
+                    <div style="font-size: 12px; opacity: 0.9;">Audio will continue playing</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 3000);
         
         // Change button state
         const btn = document.getElementById('background-play');
-        btn.textContent = '⏸️ Stop Background';
-        btn.style.background = 'var(--success-color)';
+        btn.innerHTML = '<span class="icon icon-headphones"></span> Stop Background';
+        btn.style.background = 'linear-gradient(135deg, var(--neon-green), var(--accent-color))';
+        btn.style.boxShadow = '0 0 20px var(--accent-glow)';
     }
 
     // Stop background play
@@ -271,8 +303,9 @@ class VideoPlayer {
         
         const btn = document.getElementById('background-play');
         if (btn) {
-            btn.textContent = '🎧 Background';
+            btn.innerHTML = '<span class="icon icon-headphones"></span> Background';
             btn.style.background = '';
+            btn.style.boxShadow = '';
         }
     }
 
@@ -288,7 +321,36 @@ class VideoPlayer {
                 savedAt: Date.now()
             };
             
-            storage.saveVideo(videoData);
+            
+            // Show success notification
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 80px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, var(--neon-green), var(--accent-color));
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                font-size: 14px;
+                font-weight: 600;
+                z-index: 10000;
+                box-shadow: 0 0 30px var(--accent-glow);
+                max-width: 90%;
+                text-align: center;
+            `;
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="icon icon-save" style="font-size: 20px;"></span>
+                    <div>Video Saved!</div>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 2500
             alert(`Video saved: ${title}\n\nNote: This saves video info for quick access. Actual video streaming still requires internet.`);
         } catch (error) {
             console.error('Download error:', error);
