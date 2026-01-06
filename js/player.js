@@ -32,15 +32,16 @@ class VideoPlayer {
         iframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share');
         iframe.setAttribute('loading', 'eager');
         
-        // Use nocookie domain and proper embed URL
-        const embedUrl = new URL(`https://www.youtube-nocookie.com/embed/${videoId}`);
+        // Use standard YouTube embed for better compatibility
+        const embedUrl = new URL(`https://www.youtube.com/embed/${videoId}`);
         embedUrl.searchParams.set('autoplay', '1');
         embedUrl.searchParams.set('modestbranding', '1');
         embedUrl.searchParams.set('rel', '0');
         embedUrl.searchParams.set('playsinline', '1');
+        embedUrl.searchParams.set('fs', '1');
         embedUrl.searchParams.set('enablejsapi', '1');
-        embedUrl.searchParams.set('origin', window.location.origin);
-        embedUrl.searchParams.set('widget_referrer', window.location.href);
+        // Remove origin restriction to avoid blocking
+        // embedUrl.searchParams.set('origin', window.location.origin);
         
         iframe.src = embedUrl.toString();
         
@@ -212,23 +213,30 @@ class VideoPlayer {
         const wrapper = document.getElementById('player-wrapper');
         if (!wrapper) return;
         
+        // Try nocookie domain as alternative
         wrapper.innerHTML = `
             <iframe 
                 style="width: 100%; height: 100%; border: none;" 
-                src="https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1&fs=1&playsinline=1&rel=0&modestbranding=1" 
-                allow="autoplay; fullscreen; picture-in-picture; encrypted-media" 
+                src="https://www.youtube-nocookie.com/embed/${videoId}?autoplay=1&controls=1&fs=1&playsinline=1&rel=0&modestbranding=1&enablejsapi=1" 
+                allow="autoplay; fullscreen; picture-in-picture; encrypted-media; accelerometer; gyroscope" 
                 allowfullscreen
-                sandbox="allow-same-origin allow-scripts allow-presentation">
+                referrerpolicy="no-referrer-when-downgrade">
             </iframe>
         `;
         
-        // Check again after 2 seconds
+        // Show success message
+        const msg = document.createElement('div');
+        msg.style.cssText = 'position: absolute; top: 10px; left: 50%; transform: translateX(-50%); background: var(--success-color); color: white; padding: 8px 16px; border-radius: 8px; font-size: 12px; z-index: 100; animation: fadeOut 3s forwards;';
+        msg.textContent = 'Trying alternative embed...';
+        wrapper.appendChild(msg);
+        
+        // Check again after 3 seconds
         setTimeout(() => {
             const iframe = wrapper.querySelector('iframe');
             if (!iframe || iframe.clientHeight === 0) {
                 this.showFallbackPlayer(videoId, wrapper);
             }
-        }, 2000);
+        }, 3000);
     }
 
     // Show player section

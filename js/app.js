@@ -12,40 +12,62 @@ class FastTubeApp {
     async init() {
         console.log('Initializing FastTube...');
         
-        // Check API key
-        if (CONFIG.API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE') {
-            this.showAPIKeyPrompt();
-        }
-        
-        // Setup event listeners
+        // Setup event listeners FIRST (critical for responsiveness)
         this.setupEventListeners();
         
         // Load settings
         this.loadSettings();
         
-        // Load trending videos
-        await this.loadTrendingVideos();
-        
-        // Hide loading screen
+        // Hide loading screen immediately for better UX
         this.hideLoadingScreen();
+        
+        // Check API key and load content
+        if (CONFIG.API_KEY === 'YOUR_YOUTUBE_API_KEY_HERE') {
+            this.showAPIKeyPrompt();
+        } else {
+            // Load trending videos
+            await this.loadTrendingVideos();
+        }
     }
 
     // Setup all event listeners
     setupEventListeners() {
+        console.log('Setting up event listeners...');
+        
         // Search
-        document.getElementById('search-btn').addEventListener('click', () => this.handleSearch());
-        document.getElementById('search-input').addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') this.handleSearch();
-        });
+        const searchBtn = document.getElementById('search-btn');
+        const searchInput = document.getElementById('search-input');
+        
+        if (searchBtn) {
+            searchBtn.addEventListener('click', () => {
+                console.log('Search button clicked');
+                this.handleSearch();
+            });
+        }
+        
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    console.log('Enter key pressed in search');
+                    this.handleSearch();
+                }
+            });
+        }
         
         // Filters
         document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleFilterClick(e));
+            btn.addEventListener('click', (e) => {
+                console.log('Filter clicked:', e.target.dataset.filter);
+                this.handleFilterClick(e);
+            });
         });
         
         // Navigation
         document.querySelectorAll('.nav-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => this.handleNavigation(e));
+            btn.addEventListener('click', (e) => {
+                console.log('Navigation clicked:', e.target.dataset.page);
+                this.handleNavigation(e);
+            });
         });
         
         // Player controls
