@@ -8,18 +8,22 @@ class VideoPlayer {
         this.embedCheckTimeout = null;
     }
 
-    // Open official YouTube player - FASTEST, works 100%
+    // Open embedded player page with background play support
     async initPlayer(videoId, quality = 'default') {
         this.currentVideoId = videoId;
         
-        // Open YouTube's official player directly (mobile-optimized)
-        const youtubeUrl = `https://m.youtube.com/watch?v=${videoId}`;
-        window.open(youtubeUrl, '_blank');
+        // Open dedicated player page with background play
+        const playerUrl = `player.html?v=${videoId}`;
+        window.open(playerUrl, '_blank', 'width=800,height=600');
         
-        // Close our player section since video opens in YouTube
-        setTimeout(() => {
-            this.closePlayer();
-        }, 500);
+        // Load video details in main app
+        this.loadVideoDetails(videoId);
+        
+        // Show player section with details
+        const playerSection = document.getElementById('video-player');
+        if (playerSection) {
+            playerSection.classList.add('active');
+        }
     }
     
     // Load video description and stats

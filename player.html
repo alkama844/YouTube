@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastTube Player</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #000;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        #player-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: #000;
+        }
+
+        #youtube-player {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+
+        #controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+            padding: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+
+        #controls.hidden {
+            opacity: 0;
+            transform: translateY(100%);
+            pointer-events: none;
+        }
+
+        .control-btn {
+            background: rgba(0, 240, 255, 0.2);
+            border: 2px solid #00f0ff;
+            color: #00f0ff;
+            padding: 12px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: all 0.3s;
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.3);
+            white-space: nowrap;
+        }
+
+        .control-btn:hover,
+        .control-btn:active {
+            background: rgba(0, 240, 255, 0.4);
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.6);
+            transform: scale(1.05);
+        }
+
+        .control-btn.active {
+            background: #00f0ff;
+            color: #000;
+            box-shadow: 0 0 40px rgba(0, 240, 255, 0.8);
+        }
+
+        #error-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a1a 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            z-index: 2000;
+            text-align: center;
+        }
+
+        #error-screen.show {
+            display: flex;
+        }
+
+        #error-screen h2 {
+            color: #ff00ff;
+            font-size: 24px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 20px rgba(255, 0, 255, 0.6);
+        }
+
+        #error-screen p {
+            color: #00f0ff;
+            font-size: 16px;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        #open-youtube-btn {
+            background: linear-gradient(135deg, #ff00ff, #00f0ff);
+            border: none;
+            color: #fff;
+            padding: 15px 35px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 0 0 40px rgba(255, 0, 255, 0.5);
+            transition: all 0.3s;
+        }
+
+        #open-youtube-btn:hover,
+        #open-youtube-btn:active {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px rgba(255, 0, 255, 0.8);
+        }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #00f0ff;
+            font-size: 18px;
+            text-align: center;
+            z-index: 1500;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(0, 240, 255, 0.3);
+            border-top-color: #00f0ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .control-btn {
+                padding: 10px 15px;
+                font-size: 12px;
+            }
+
+            #error-screen h2 {
+                font-size: 20px;
+            }
+
+            #error-screen p {
+                font-size: 14px;
+            }
+        }
+
+        /* Hide controls on tap/click outside */
+        #player-container.playing #controls {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #player-container.playing:hover #controls,
+        #player-container.playing:active #controls {
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">
+        <div class="spinner"></div>
+        <div>Loading Player...</div>
+    </div>
+
+    <div id="player-container">
+        <iframe id="youtube-player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        
+        <div id="controls">
+            <button class="control-btn" id="pip-btn">📺 PiP</button>
+            <button class="control-btn" id="fullscreen-btn">⛶ Full</button>
+            <button class="control-btn" id="close-btn">✕ Close</button>
+        </div>
+    </div>
+
+    <div id="error-screen">
+        <h2>⚠️ Video Cannot Be Embedded</h2>
+        <p>This video is restricted by the creator and cannot be played here.<br>Opening in YouTube for full experience...</p>
+        <button id="open-youtube-btn">Open in YouTube</button>
+    </div>
+
+    <script>
+        // Get video ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const videoId = urlParams.get('v');
+
+        // Elements
+        const playerContainer = document.getElementById('player-container');
+        const youtubePlayer = document.getElementById('youtube-player');
+        const controls = document.getElementById('controls');
+        const pipBtn = document.getElementById('pip-btn');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+        const closeBtn = document.getElementById('close-btn');
+        const errorScreen = document.getElementById('error-screen');
+        const openYoutubeBtn = document.getElementById('open-youtube-btn');
+        const loading = document.getElementById('loading');
+
+        let pipSupported = false;
+        let isBlocked = false;
+        let controlsTimer = null;
+
+        // Check if video ID exists
+        if (!videoId) {
+            showError('No video ID provided');
+        } else {
+            initPlayer();
+        }
+
+        function initPlayer() {
+            // Load video with optimal parameters for embedding
+            const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&origin=${window.location.origin}&playsinline=1&modestbranding=1&rel=0`;
+            
+            youtubePlayer.src = embedUrl;
+
+            // Hide loading after iframe loads
+            youtubePlayer.addEventListener('load', () => {
+                setTimeout(() => {
+                    loading.style.display = 'none';
+                    playerContainer.classList.add('playing');
+                }, 1000);
+            });
+
+            // Detect if video is blocked (Error 150/153)
+            setTimeout(() => {
+                detectBlocked();
+            }, 4000);
+
+            // Check PiP support
+            if ('pictureInPictureEnabled' in document) {
+                pipSupported = true;
+            } else {
+                pipBtn.style.display = 'none';
+            }
+        }
+
+        function detectBlocked() {
+            // If iframe is still loading or shows error, video might be blocked
+            // We can't directly detect iframe errors, so we rely on timeout and user feedback
+            // YouTube will show error inside iframe if video is blocked
+            
+            // Listen for messages from YouTube iframe
+            window.addEventListener('message', (event) => {
+                if (event.origin !== 'https://www.youtube.com') return;
+                
+                if (event.data && typeof event.data === 'string') {
+                    if (event.data.includes('error') || event.data.includes('blocked')) {
+                        showBlockedScreen();
+                    }
+                }
+            });
+        }
+
+        function showBlockedScreen() {
+            if (isBlocked) return;
+            isBlocked = true;
+            
+            errorScreen.classList.add('show');
+            
+            // Auto-redirect after 3 seconds
+            setTimeout(() => {
+                openInYouTube();
+            }, 3000);
+        }
+
+        function showError(message) {
+            loading.style.display = 'none';
+            errorScreen.querySelector('p').textContent = message;
+            errorScreen.classList.add('show');
+        }
+
+        // Picture-in-Picture
+        pipBtn.addEventListener('click', async () => {
+            if (!pipSupported) {
+                alert('Picture-in-Picture not supported on this device');
+                return;
+            }
+
+            try {
+                // PiP for iframe is tricky, we need to use the video element inside
+                // Since we can't access iframe content, we'll try document PiP API
+                if (document.pictureInPictureElement) {
+                    await document.exitPictureInPicture();
+                    pipBtn.classList.remove('active');
+                } else {
+                    // For iframe, we can't directly use PiP
+                    // Instead, inform user to use YouTube's native PiP
+                    alert('Use YouTube\'s built-in PiP button in the video player controls');
+                }
+            } catch (error) {
+                console.error('PiP error:', error);
+                alert('Picture-in-Picture not available. Try using YouTube\'s native PiP button.');
+            }
+        });
+
+        // Fullscreen
+        fullscreenBtn.addEventListener('click', async () => {
+            try {
+                if (document.fullscreenElement) {
+                    await document.exitFullscreen();
+                    fullscreenBtn.textContent = '⛶ Full';
+                } else {
+                    await playerContainer.requestFullscreen();
+                    fullscreenBtn.textContent = '⛶ Exit';
+                }
+            } catch (error) {
+                console.error('Fullscreen error:', error);
+            }
+        });
+
+        // Close player
+        closeBtn.addEventListener('click', () => {
+            if (window.opener) {
+                window.close();
+            } else {
+                window.history.back();
+            }
+        });
+
+        // Open in YouTube
+        openYoutubeBtn.addEventListener('click', () => {
+            openInYouTube();
+        });
+
+        function openInYouTube() {
+            window.open(`https://m.youtube.com/watch?v=${videoId}`, '_blank');
+            setTimeout(() => {
+                if (window.opener) {
+                    window.close();
+                }
+            }, 500);
+        }
+
+        // Auto-hide controls
+        function resetControlsTimer() {
+            clearTimeout(controlsTimer);
+            controls.classList.remove('hidden');
+            
+            controlsTimer = setTimeout(() => {
+                if (playerContainer.classList.contains('playing')) {
+                    controls.classList.add('hidden');
+                }
+            }, 3000);
+        }
+
+        // Show controls on interaction
+        playerContainer.addEventListener('click', resetControlsTimer);
+        playerContainer.addEventListener('touchstart', resetControlsTimer);
+        playerContainer.addEventListener('mousemove', resetControlsTimer);
+
+        // Initial controls timer
+        setTimeout(() => {
+            resetControlsTimer();
+        }, 2000);
+
+        // Handle back button
+        window.addEventListener('popstate', () => {
+            if (window.opener) {
+                window.close();
+            }
+        });
+
+        // Optimize for old phones
+        document.addEventListener('DOMContentLoaded', () => {
+            // Disable smooth scroll for better performance
+            document.documentElement.style.scrollBehavior = 'auto';
+            
+            // Add hardware acceleration
+            playerContainer.style.transform = 'translateZ(0)';
+            youtubePlayer.style.transform = 'translateZ(0)';
+        });
+
+        // Background play support using Page Visibility API
+        let wasPlaying = false;
+
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+                // Page hidden (background) - video should keep playing if YouTube allows
+                wasPlaying = true;
+                console.log('App in background - video continues if YouTube allows');
+            } else {
+                // Page visible again
+                console.log('App back in foreground');
+            }
+        });
+
+        // Prevent accidental navigation
+        window.addEventListener('beforeunload', (e) => {
+            if (!isBlocked && playerContainer.classList.contains('playing')) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            switch(e.key) {
+                case 'f':
+                case 'F':
+                    fullscreenBtn.click();
+                    break;
+                case 'p':
+                case 'P':
+                    pipBtn.click();
+                    break;
+                case 'Escape':
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        closeBtn.click();
+                    }
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
