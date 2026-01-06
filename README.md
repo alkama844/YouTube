@@ -19,7 +19,13 @@ npm i -g vercel
 cd YouTube
 vercel
 
-# Follow prompts, then you're live!
+# Follow prompts:
+# - Framework Preset: Other (or leave default)
+# - Build Command: (leave empty)
+# - Output Directory: (leave empty or use ".")
+# - Development Command: (leave empty)
+
+# Your app is now live!
 ```
 
 ### Method 2: GitHub + Vercel Dashboard
@@ -27,7 +33,8 @@ vercel
 2. Go to https://vercel.com/
 3. Click "Import Project"
 4. Select your GitHub repo
-5. Click "Deploy" - Done!
+5. Framework Preset: **Other** (no framework needed)
+6. Click "Deploy" - Done!
 
 ### Method 3: Drag & Drop
 1. Go to https://vercel.com/
