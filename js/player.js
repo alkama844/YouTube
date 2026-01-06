@@ -666,12 +666,6 @@ class VideoPlayer {
         miniPlayer.classList.remove('active');
     }
 
-    // Enhanced show player with thumbnail
-    async showPlayerEnhanced(videoId, title, thumbnail) {
-        this.currentVideoThumbnail = thumbnail;
-        await this.showPlayer(videoId, title);
-    }
-
     // Show notification
     showNotification(message, type = 'info') {
         const notification = document.createElement('div');
