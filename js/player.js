@@ -133,67 +133,88 @@ class VideoPlayer {
     // Show fallback player with alternative options
     showFallbackPlayer(videoId, wrapper) {
         const youtubeUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        const mobileUrl = `https://m.youtube.com/watch?v=${videoId}`;
         const appUrl = `vnd.youtube://${videoId}`;
         
         wrapper.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; padding: 30px; text-align: center; color: var(--text-primary); background: linear-gradient(135deg, var(--surface-color) 0%, var(--bg-color) 100%);">
-                <div style="width: 80px; height: 80px; margin-bottom: 25px; position: relative;">
-                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--danger-color); border-radius: 50%; opacity: 0.3;"></div>
-                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--danger-color); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; border-top-color: transparent;"></div>
-                    <svg style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--danger-color)" stroke-width="2">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 350px; padding: 20px; text-align: center; color: var(--text-primary); background: linear-gradient(135deg, var(--surface-color) 0%, var(--bg-color) 100%);">
+                <div style="width: 80px; height: 80px; margin-bottom: 20px; position: relative;">
+                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--neon-orange); border-radius: 50%; opacity: 0.3;"></div>
+                    <div style="position: absolute; width: 100%; height: 100%; border: 3px solid var(--neon-orange); border-radius: 50%; animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite; border-top-color: transparent;"></div>
+                    <svg style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-orange)" stroke-width="2.5">
                         <circle cx="12" cy="12" r="10"/>
-                        <line x1="15" y1="9" x2="9" y2="15"/>
-                        <line x1="9" y1="9" x2="15" y2="15"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                 </div>
                 
-                <h3 style="margin-bottom: 12px; font-size: 18px; color: var(--danger-color); font-weight: 600;">Error 153: Playback Restricted</h3>
-                <p style="color: var(--text-secondary); margin-bottom: 10px; font-size: 14px; max-width: 450px; line-height: 1.6;">
-                    This video cannot be embedded due to creator restrictions or copyright policies.
+                <h3 style="margin-bottom: 10px; font-size: 19px; color: var(--neon-orange); font-weight: 700;">⚠️ Embedding Disabled</h3>
+                <p style="color: var(--text-primary); margin-bottom: 8px; font-size: 14px; max-width: 420px; line-height: 1.5; font-weight: 500;">
+                    This video owner has disabled playback on external websites (Error 153)
                 </p>
-                <p style="color: var(--text-secondary); margin-bottom: 30px; font-size: 13px; max-width: 450px; line-height: 1.5; opacity: 0.8;">
-                    Use one of these options to watch the video:
+                <p style="color: var(--text-secondary); margin-bottom: 25px; font-size: 12px; max-width: 420px; line-height: 1.4;">
+                    <strong style="color: var(--neon-blue);">We use iframe (the only way to embed)</strong>, but the video creator blocked it. Choose an option below:
                 </p>
                 
-                <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-bottom: 20px;">
+                <div style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 400px; margin-bottom: 15px;">
                     <a href="${youtubeUrl}" target="_blank" rel="noopener noreferrer" 
-                       style="background: linear-gradient(135deg, var(--neon-blue), var(--neon-pink)); 
-                              color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; 
-                              font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
-                              box-shadow: 0 0 20px var(--primary-glow); transition: all 0.3s ease;
-                              border: 1px solid var(--neon-blue);"
-                       onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 0 30px var(--primary-glow)'"
-                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0 20px var(--primary-glow)'">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                       style="background: linear-gradient(135deg, #FF0000, #CC0000); 
+                              color: white; padding: 16px 24px; border-radius: 12px; text-decoration: none; 
+                              font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 10px;
+                              box-shadow: 0 4px 20px rgba(255, 0, 0, 0.4); transition: all 0.3s ease;
+                              border: 2px solid #FF0000; font-size: 15px;"
+                       onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 30px rgba(255, 0, 0, 0.6)'"
+                       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(255, 0, 0, 0.4)'">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
                             <polygon points="5 3 19 12 5 21 5 3"/>
                         </svg>
-                        Watch on YouTube
+                        Open on YouTube.com
                     </a>
                     
-                    <a href="${appUrl}" 
-                       style="background: var(--surface-hover); 
-                              color: var(--neon-blue); padding: 14px 28px; border-radius: 12px; text-decoration: none; 
-                              font-weight: 600; display: inline-flex; align-items: center; gap: 8px;
-                              border: 2px solid var(--border-color); transition: all 0.3s ease;"
-                       onmouseover="this.style.borderColor='var(--neon-blue)'; this.style.boxShadow='0 0 20px var(--primary-glow)'"
-                       onmouseout="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none'">
+                    <a href="${mobileUrl}" target="_blank" rel="noopener noreferrer" 
+                       style="background: var(--surface-color); 
+                              color: var(--neon-blue); padding: 14px 24px; border-radius: 12px; text-decoration: none; 
+                              font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;
+                              border: 2px solid var(--neon-blue); transition: all 0.3s ease; font-size: 14px;"
+                       onmouseover="this.style.background='var(--surface-hover)'; this.style.boxShadow='0 0 20px var(--primary-glow)'"
+                       onmouseout="this.style.background='var(--surface-color)'; this.style.boxShadow='none'">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
-                            <line x1="12" y1="18" x2="12" y2="18"/>
+                            <line x1="12" y1="18" x2="12.01" y2="18"/>
                         </svg>
-                        Open in App
+                        Mobile YouTube
                     </a>
+                    
+                    <button onclick="navigator.clipboard.writeText('${youtubeUrl}').then(() => alert('✅ Link copied! Paste it in your browser or YouTube app')).catch(() => prompt('Copy this link:', '${youtubeUrl}'))" 
+                       style="background: var(--surface-color); 
+                              color: var(--neon-green); padding: 14px 24px; border-radius: 12px; 
+                              font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px;
+                              border: 2px solid var(--neon-green); transition: all 0.3s ease; font-size: 14px; cursor: pointer;"
+                       onmouseover="this.style.background='var(--surface-hover)'; this.style.boxShadow='0 0 20px var(--accent-glow)'"
+                       onmouseout="this.style.background='var(--surface-color)'; this.style.boxShadow='none'">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                        </svg>
+                        Copy Video Link
+                    </button>
+                </div>
+                
+                <div style="padding: 15px; background: rgba(0, 240, 255, 0.1); border: 1px solid var(--neon-blue); border-radius: 10px; margin-top: 15px; max-width: 400px;">
+                    <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin: 0;">
+                        <strong style="color: var(--neon-blue);">💡 Why this happens:</strong><br>
+                        YouTube allows creators to disable embedding (iframe) for their videos. FastTube respects these restrictions. The buttons above will open the video where it CAN play.
+                    </p>
                 </div>
                 
                 <button onclick="videoPlayer.tryAlternativeEmbed('${videoId}')" 
                         style="background: transparent; color: var(--text-secondary); 
                                padding: 10px 20px; border: 1px solid var(--border-color); 
-                               border-radius: 8px; cursor: pointer; font-size: 13px; 
-                               transition: all 0.3s ease; margin-top: 10px;"
-                        onmouseover="this.style.color='var(--neon-blue)'; this.style.borderColor='var(--neon-blue)'"
+                               border-radius: 8px; cursor: pointer; font-size: 12px; 
+                               transition: all 0.3s ease; margin-top: 12px;"
+                        onmouseover="this.style.color='var(--neon-pink)'; this.style.borderColor='var(--neon-pink)'"
                         onmouseout="this.style.color='var(--text-secondary)'; this.style.borderColor='var(--border-color)'">
-                    <span class="icon icon-play" style="display: inline-block; margin-right: 6px;"></span>
-                    Try Alternative Embed
+                    🔄 Try Alternative Embed (rarely works)
                 </button>
                 
                 <style>
