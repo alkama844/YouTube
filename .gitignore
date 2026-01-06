@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+.env
+.env.local
+node_modules/
+dist/
+build/
+*.log
+.cache/
+.vscode/
+.idea/
+
+# Don't commit API keys
+js/config.js.backup
+api-key.txt
